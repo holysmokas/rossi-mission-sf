@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbx2iFuOJKT1cfjN7VGMU1BczAqroPLhK2wLCy52wPR_T3Z4jbdH94A8NXMmG7zKUoPQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxX2isFuOJKt1cfjN7VGMU1BcZAqroPLhK2wLCy52wPR_T3Z4jbdH9A48NXMmG7zKUoPQ/exec";
 
 export default function Admin() {
     const [products, setProducts] = useState([]);
