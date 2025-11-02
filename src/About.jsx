@@ -60,7 +60,7 @@ function About() {
                     height: '4rem'
                 }}>
                     <div>
-                        <Link href="/" style={{
+                        <Link to="/" style={{
                             fontSize: '1.5rem',
                             fontWeight: 'bold',
                             background: 'linear-gradient(to right, #f43f5e, #ec4899)',
@@ -73,12 +73,12 @@ function About() {
                         </Link>
                     </div>
                     <nav style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                        <a href="/" style={{
+                        <Link to="/" style={{
                             color: '#374151',
                             fontWeight: '500',
                             textDecoration: 'none'
                         }}>Shop</a>
-                        <Link href="/about" style={{
+                        <Link to="/about" style={{
                             color: '#f43f5e',
                             fontWeight: '600',
                             textDecoration: 'none'
