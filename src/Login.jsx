@@ -8,7 +8,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwgA9T5fgktO-QmesQoQCnF0wN9MIBi5jYLEhR8QixyRyNntL1Bpq52TRlLS7Csxbm79g/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywgGjC5EITXSmcjKG0fSrwPsvaHqMBRI_AjZzGCC2yn3h3rbbh8n0N2yqMnmz6Ru7eCw/exec';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
