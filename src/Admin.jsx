@@ -20,7 +20,7 @@ function Admin() {
         isNew: false
     });
 
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywgGjC5EITXSmcjKG0fSrwPsvaHqMBRI_AjZzGCC2yn3h3rbbh8n0N2yqMnmz6Ru7eCw/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCYF_V6khy6CqF69v14kS0dzZpjVaoC_e76Eh4m4zIs1n2OE5HWY99cy0_PzQqnaMk5w/exec';
 
     // Load products on mount
     useEffect(() => {
