@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwl2szhF32egWYfi6zYJGhXYOyqB7GwY5rzXqsD8iKlqtL3AlXGRBEjQqAjOT2YBmUk7A/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwMfhVzXyH7JfCBm2v6OiiuodNXyj_syJZdORGGoqGyJ1CztGhcRQE7Ys-JTIjgfxhO5w/exec";
 
 export default function Login() {
   const [email, setEmail] = useState("");
