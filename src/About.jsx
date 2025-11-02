@@ -60,7 +60,7 @@ function About() {
                     height: '4rem'
                 }}>
                     <div>
-                        <a href="/" style={{
+                        <Link href="/" style={{
                             fontSize: '1.5rem',
                             fontWeight: 'bold',
                             background: 'linear-gradient(to right, #f43f5e, #ec4899)',
@@ -70,7 +70,7 @@ function About() {
                             textDecoration: 'none'
                         }}>
                             Rossi Mission SF
-                        </a>
+                        </Link>
                     </div>
                     <nav style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                         <a href="/" style={{
@@ -78,11 +78,11 @@ function About() {
                             fontWeight: '500',
                             textDecoration: 'none'
                         }}>Shop</a>
-                        <a href="/about" style={{
+                        <Link href="/about" style={{
                             color: '#f43f5e',
                             fontWeight: '600',
                             textDecoration: 'none'
-                        }}>About</a>
+                        }}>About</Link>
                         <button style={{
                             padding: '0.5rem 1rem',
                             background: '#f43f5e',
