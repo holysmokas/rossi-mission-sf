@@ -20,7 +20,9 @@ function Admin() {
         isNew: false
     });
 
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCYF_V6khy6CqF69v14kS0dzZpjVaoC_e76Eh4m4zIs1n2OE5HWY99cy0_PzQqnaMk5w/exec';
+    const proxyUrl = 'https://corsproxy.io/?';
+    const APPS_SCRIPT_URL = proxyUrl + 'https://script.google.com/macros/s/AKfycbwS4EZsbmDyZjMevuU8QVT4FPOeli7mEHv22FQzy1UOFtaInSfYrlmWxlcTS3d5HYLQUw/exec';
+
 
     // Load products on mount
     useEffect(() => {
