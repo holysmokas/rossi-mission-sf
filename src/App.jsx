@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 function App() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const APPS_SCRIPT_URL = 'hhttps://script.google.com/macros/s/AKfycbywgGjC5EITXSmcjKG0fSrwPsvaHqMBRI_AjZzGCC2yn3h3rbbh8n0N2yqMnmz6Ru7eCw/exec'; 
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywgGjC5EITXSmcjKG0fSrwPsvaHqMBRI_AjZzGCC2yn3h3rbbh8n0N2yqMnmz6Ru7eCw/exec'; 
 
   useEffect(() => {
     async function loadProducts() {
