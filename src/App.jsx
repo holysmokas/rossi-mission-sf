@@ -6,6 +6,7 @@ import Events from "./Events";
 import About from "./About";
 import Contact from "./Contact";
 import Login from "./Login";
+import Admin from "./Admin"; // ✅ Import Admin
 import "./index.css";
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin" element={<Admin />} /> {/* ✅ Add this route */}
       </Routes>
     </HashRouter>
   );
