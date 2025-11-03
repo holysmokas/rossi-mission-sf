@@ -39,6 +39,9 @@ jobs:
 
       - name: Update README with last deployment time
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
           timestamp=$(date -u "+%Y-%m-%d %H:%M UTC")
           sed -i "s|<!--LAST_DEPLOY-->.*<!--END_LAST_DEPLOY-->|<!--LAST_DEPLOY--> $timestamp <!--END_LAST_DEPLOY-->|" README.md
           git add README.md
@@ -48,3 +51,5 @@ jobs:
             git commit -m "Update last deployment time"
             git push
           fi
+
+
