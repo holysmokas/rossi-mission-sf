@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 import "./index.css";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxjTRuN2xEh9FQ6-S95IHsTN4GeD_bBMcSzjw-he7tl73RKTD_TefBzzMSZgil42OWVHA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzkkqF31wniNERaPh161216ZU1miYe7n_WfKXGWRUILXwhiddIaL8oFYiyNo9r6BFIf5g/exec";
 
 export default function Login() {
   const [email, setEmail] = useState("");
