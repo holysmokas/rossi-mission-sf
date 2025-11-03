@@ -1,0 +1,50 @@
+name: Build and Deploy to GitHub Pages (docs folder)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'vite.config.js'
+      - 'package.json'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Move build to docs folder
+        run: |
+          rm -rf docs
+          mkdir docs
+          cp -r dist/* docs/
+
+      - name: Update README with last deployment time
+        run: |
+          timestamp=$(date -u "+%Y-%m-%d %H:%M UTC")
+          sed -i "s|<!--LAST_DEPLOY-->.*<!--END_LAST_DEPLOY-->|<!--LAST_DEPLOY--> $timestamp <!--END_LAST_DEPLOY-->|" README.md
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "No README update needed."
+          else
+            git commit -m "Update last deployment time"
+            git push
+          fi
