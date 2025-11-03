@@ -19,7 +19,7 @@ If you are developing a production application, we recommend using TypeScript wi
 
 [![Build and Deploy](https://github.com/holysmokas/rossi-mission-sf/actions/workflows/deploy.yml/badge.svg)](https://github.com/holysmokas/rossi-mission-sf/actions/workflows/deploy.yml)
 
-✅ **Last deployed:** <!--LAST_DEPLOY--> 2025-11-03 09:39 UTC <!--END_LAST_DEPLOY-->
+✅ **Last deployed:** <!--LAST_DEPLOY--> 2025-11-03 12:57 UTC <!--END_LAST_DEPLOY-->
 
 This repository contains the Rossi Mission SF website — a black & white themed React + Vite project deployed automatically to GitHub Pages.
 
