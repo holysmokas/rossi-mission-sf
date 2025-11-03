@@ -12,6 +12,9 @@ on:
       - 'package.json'
       - '.github/workflows/deploy.yml'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,6 +22,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -31,25 +36,26 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Move build to docs folder
-        run: |
-          rm -rf docs
-          mkdir docs
-          cp -r dist/* docs/
-
-      - name: Update README with last deployment time
+      - name: Copy build to docs and update README timestamp
+        if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Replace docs folder with new build
+          rm -rf docs
+          mkdir docs
+          cp -r dist/* docs/
+
+          # Update README with new timestamp
           timestamp=$(date -u "+%Y-%m-%d %H:%M UTC")
           sed -i "s|<!--LAST_DEPLOY-->.*<!--END_LAST_DEPLOY-->|<!--LAST_DEPLOY--> $timestamp <!--END_LAST_DEPLOY-->|" README.md
-          git add README.md
+
+          # Commit and push both changes together
+          git add docs README.md
           if git diff --cached --quiet; then
-            echo "No README update needed."
+            echo "No changes to commit."
           else
-            git commit -m "Update last deployment time"
-            git push
+            git commit -m "Auto-deploy build and update README timestamp"
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/holysmokas/rossi-mission-sf.git HEAD:main
           fi
-
-
