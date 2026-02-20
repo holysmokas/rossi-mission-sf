@@ -1,0 +1,86 @@
+.visit-section {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.visit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  margin-top: 40px;
+}
+
+.visit-info h3 {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.4rem;
+  letter-spacing: 4px;
+  margin-bottom: 16px;
+  color: var(--white);
+}
+
+.visit-info p,
+.visit-info a {
+  font-size: 0.85rem;
+  line-height: 2;
+  color: var(--gray-light);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.visit-info a:hover { color: var(--white); }
+
+.visit-map {
+  height: 350px;
+  background: var(--gray-dark);
+  border: 1px solid var(--gray-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-text {
+  font-family: 'Dela Gothic One', cursive;
+  font-size: 1.5rem;
+  color: var(--gray-mid);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.map-link {
+  position: absolute;
+  bottom: 16px; right: 16px;
+  font-size: 0.6rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gray-light);
+  text-decoration: none;
+  border: 1px solid var(--gray-mid);
+  padding: 8px 16px;
+  transition: all 0.3s;
+}
+
+.map-link:hover {
+  color: var(--white);
+  border-color: var(--white);
+}
+
+.hours-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.hours-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--gray-light);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+@media (max-width: 768px) {
+  .visit-grid { grid-template-columns: 1fr; }
+}

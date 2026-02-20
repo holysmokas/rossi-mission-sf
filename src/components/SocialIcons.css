@@ -1,0 +1,41 @@
+.social-icons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--gray-light);
+  transition: color 0.3s, transform 0.3s;
+}
+
+.social-icon:hover {
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+.social-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Navbar variant — smaller */
+.nav-socials .social-icon {
+  width: 15px;
+  height: 15px;
+}
+
+/* Footer variant */
+.footer-socials {
+  gap: 20px;
+}
+
+.footer-socials .social-icon {
+  width: 16px;
+  height: 16px;
+}

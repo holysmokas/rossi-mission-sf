@@ -1,0 +1,85 @@
+.newsletter {
+  text-align: center;
+  padding: 80px 40px;
+  border-top: 1px solid var(--gray-mid);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.newsletter-desc {
+  font-size: 0.8rem;
+  color: var(--gray-light);
+  line-height: 1.8;
+}
+
+.newsletter-input {
+  display: flex;
+  margin-top: 30px;
+  border: 1px solid var(--gray-mid);
+}
+
+.newsletter-input input {
+  flex: 1;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  color: var(--white);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.newsletter-input input::placeholder {
+  color: var(--gray-mid);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+}
+
+.newsletter-input button {
+  padding: 16px 32px;
+  background: var(--white);
+  color: var(--black);
+  border: none;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.newsletter-input button:hover {
+  background: var(--gray-light);
+}
+
+.newsletter-input button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.newsletter-status {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid var(--gray-mid);
+}
+
+.newsletter-status.success p {
+  color: var(--white);
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+
+.newsletter-status.duplicate p {
+  color: var(--gray-light);
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+
+.newsletter-error {
+  width: 100%;
+  margin-top: 10px;
+  font-size: 0.7rem;
+  color: #cc6666;
+  letter-spacing: 1px;
+}

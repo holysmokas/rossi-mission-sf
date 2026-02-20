@@ -1,0 +1,78 @@
+footer {
+  padding: 40px;
+  border-top: 1px solid var(--gray-mid);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-logo {
+  font-family: 'Dela Gothic One', cursive;
+  font-size: 0.9rem;
+  letter-spacing: 3px;
+}
+
+.footer-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+
+.footer-links a {
+  color: var(--gray-light);
+  text-decoration: none;
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: color 0.3s;
+}
+
+.footer-links a:hover { color: var(--white); }
+
+.footer-bottom {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.footer-copy {
+  font-size: 0.6rem;
+  color: var(--gray-mid);
+  letter-spacing: 2px;
+}
+
+.footer-credit {
+  font-size: 0.55rem;
+  color: var(--gray-mid);
+  letter-spacing: 1px;
+}
+
+.footer-credit a {
+  color: var(--gray-light);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer-credit a:hover {
+  color: var(--white);
+}
+
+@media (max-width: 768px) {
+  footer {
+    flex-direction: column;
+    gap: 24px;
+    text-align: center;
+  }
+
+  .footer-bottom {
+    text-align: center;
+    align-items: center;
+  }
+}
