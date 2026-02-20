@@ -1,18 +1,20 @@
 nav {
   position: fixed;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px 40px;
-  background: linear-gradient(to bottom, rgba(10,10,10,0.95), transparent);
+  background: linear-gradient(to bottom, rgba(10, 10, 10, 0.95), transparent);
   backdrop-filter: blur(4px);
   transition: all 0.4s;
 }
 
 nav.scrolled {
-  background: rgba(10,10,10,0.95);
+  background: rgba(10, 10, 10, 0.95);
   padding: 14px 40px;
   border-bottom: 1px solid var(--gray-mid);
 }
@@ -53,14 +55,21 @@ nav.scrolled {
 .nav-links a::after {
   content: '';
   position: absolute;
-  bottom: -4px; left: 0;
-  width: 0; height: 1px;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1px;
   background: var(--white);
   transition: width 0.3s;
 }
 
-.nav-links a:hover { color: var(--white); }
-.nav-links a:hover::after { width: 100%; }
+.nav-links a:hover {
+  color: var(--white);
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
 
 .nav-social-item {
   display: flex;
@@ -81,19 +90,25 @@ nav.scrolled {
 }
 
 .hamburger span {
-  width: 24px; height: 2px;
+  width: 24px;
+  height: 2px;
   background: var(--white);
   transition: all 0.3s;
   display: block;
 }
 
 @media (max-width: 768px) {
-  nav { padding: 16px 20px; }
+  nav {
+    padding: 16px 20px;
+  }
 
   .nav-links {
     display: none;
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: var(--black);
     flex-direction: column;
     align-items: center;
@@ -102,9 +117,18 @@ nav.scrolled {
     z-index: 99;
   }
 
-  .nav-links.open { display: flex; }
-  .nav-links a { font-size: 1.2rem; }
-  .hamburger { display: flex; z-index: 101; }
+  .nav-links.open {
+    display: flex;
+  }
+
+  .nav-links a {
+    font-size: 1.2rem;
+  }
+
+  .hamburger {
+    display: flex;
+    z-index: 101;
+  }
 
   .nav-social-item {
     margin-left: 0;
@@ -118,5 +142,4 @@ nav.scrolled {
   display: flex;
   align-items: center;
   gap: 16px;
-}
 }
