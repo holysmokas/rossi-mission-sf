@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import SocialIcons from './SocialIcons'
 import CartButton from './CartButton'
 import './Navbar.css'
@@ -19,13 +20,10 @@ export default function Navbar() {
         <img src={`${import.meta.env.BASE_URL}logo-192.png`} alt="Rossi Mission SF" className="nav-logo-img" />
       </a>
       <ul className={`nav-links${menuOpen ? ' open' : ''}`}>
-        {['About', 'Shop', 'Gallery', 'Visit'].map(item => (
-          <li key={item}>
-            <a href={`#${item.toLowerCase()}`} onClick={() => setMenuOpen(false)}>
-              {item}
-            </a>
-          </li>
-        ))}
+        <li><a href="#about" onClick={() => setMenuOpen(false)}>About</a></li>
+        <li><Link to="/shop" onClick={() => setMenuOpen(false)}>Shop</Link></li>
+        <li><a href="#gallery" onClick={() => setMenuOpen(false)}>Gallery</a></li>
+        <li><a href="#visit" onClick={() => setMenuOpen(false)}>Visit</a></li>
         <li className="nav-social-item">
           <SocialIcons className="nav-socials" />
         </li>

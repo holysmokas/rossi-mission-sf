@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import './Hero.css'
 
 export default function Hero() {
@@ -11,7 +12,7 @@ export default function Hero() {
         </h1>
         <p className="hero-subtitle">Urban Art &bull; Streetwear &bull; Culture</p>
         <div className="hero-cta">
-          <a href="#shop">Explore the Collection</a>
+          <Link to="/shop">Explore the Collection</Link>
         </div>
       </div>
       <div className="scroll-indicator"><span></span></div>

@@ -3,7 +3,7 @@ import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Marquee from './components/Marquee'
 import About from './components/About'
-import Shop from './components/Shop'
+import VideoSection from './components/VideoSection'
 import Gallery from './components/Gallery'
 import Visit from './components/Visit'
 import Newsletter from './components/Newsletter'
@@ -20,7 +20,7 @@ export default function Site() {
         <Hero />
         <Marquee />
         <About />
-        <Shop />
+        <VideoSection />
         <Gallery />
         <Visit />
         <Newsletter />
