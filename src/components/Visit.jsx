@@ -10,7 +10,7 @@ export default function Visit() {
         <div className="visit-grid">
           <Reveal className="visit-info">
             <h3>Location</h3>
-            <p>799 Valencia Street<br />San Francisco, CA<br />Mission District</p>
+            <p>791 Valencia Street<br />San Francisco, CA<br />Mission District</p>
 
             <h3 style={{ marginTop: 32 }}>Contact</h3>
             <p>
@@ -20,13 +20,13 @@ export default function Visit() {
 
             <h3 style={{ marginTop: 32 }}>Hours</h3>
             <div className="hours-grid">
-              <div className="hours-row"><span>Monday — Friday</span><span>11:00 — 19:00</span></div>
-              <div className="hours-row"><span>Saturday</span><span>10:00 — 20:00</span></div>
+              <div className="hours-row"><span>Tuesday — Friday</span><span>11:00 — 19:00</span></div>
+              <div className="hours-row"><span>Saturday</span><span>11:00 — 20:00</span></div>
               <div className="hours-row"><span>Sunday</span><span>11:00 — 18:00</span></div>
             </div>
           </Reveal>
           <Reveal className="visit-map">
-            <div className="map-text">799 Valencia St<br />Mission District</div>
+            <div className="map-text">791 Valencia St<br />Mission District</div>
             <a
               href="https://maps.google.com/?q=799+Valencia+Street+San+Francisco"
               target="_blank"

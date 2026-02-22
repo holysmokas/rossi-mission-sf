@@ -12,7 +12,7 @@ export default function About() {
           <p>From hand-pulled screen prints to one-of-a-kind canvases, from underground labels to custom drops — if it belongs on the walls or on your back, you'll find it here.</p>
           <div className="about-stats">
             <div className="stat">
-              <div className="stat-number">799</div>
+              <div className="stat-number">791</div>
               <div className="stat-label">Valencia St</div>
             </div>
             <div className="stat">

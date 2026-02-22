@@ -46,7 +46,7 @@
   line-height: 0.95;
   letter-spacing: -2px;
   text-transform: uppercase;
-  background: linear-gradient(180deg, #ffffff 0%, #666666 100%);
+  background: linear-gradient(180deg, #1a1a1a 0%, #999999 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -59,7 +59,7 @@
   font-family: 'Bebas Neue', cursive;
   font-size: clamp(1.5rem, 4vw, 3.5rem);
   letter-spacing: 16px;
-  background: linear-gradient(180deg, #999 0%, #444 100%);
+  background: linear-gradient(180deg, #666 0%, #bbb 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

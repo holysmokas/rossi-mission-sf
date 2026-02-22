@@ -12,7 +12,7 @@ class FloatingItem {
     this.y = startRandom ? Math.random() * this.h : -80
     this.size = 30 + Math.random() * 55
     this.speed = 0.2 + Math.random() * 0.4
-    this.opacity = 0.25 + Math.random() * 0.4
+    this.opacity = 0.15 + Math.random() * 0.25
     this.type = Math.floor(Math.random() * 5)
     this.rotation = (Math.random() - 0.5) * 0.6
     this.rotSpeed = (Math.random() - 0.5) * 0.003
@@ -35,7 +35,7 @@ class FloatingItem {
     ctx.translate(this.x, this.y)
     ctx.rotate(this.rotation)
     ctx.globalAlpha = this.opacity
-    ctx.strokeStyle = '#fff'
+    ctx.strokeStyle = '#333'
     ctx.lineWidth = 1.5 + this.size / 40
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
@@ -67,7 +67,7 @@ class FloatingItem {
     for (let i = 0; i < 3; i++) {
       ctx.beginPath()
       ctx.arc(-s / 10 + i * s / 6, -s / 6 - i * s / 20, 1.5, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(255,255,255,${this.opacity})`
+      ctx.fillStyle = `rgba(51,51,51,${this.opacity})`
       ctx.fill()
     }
     ctx.beginPath()
@@ -153,7 +153,7 @@ class FloatingItem {
     ctx.stroke()
     ctx.beginPath()
     ctx.arc(0, -ch / 3, 2, 0, Math.PI * 2)
-    ctx.fillStyle = `rgba(255,255,255,${this.opacity * 0.6})`
+    ctx.fillStyle = `rgba(51,51,51,${this.opacity * 0.6})`
     ctx.fill()
   }
 
@@ -190,7 +190,7 @@ class PaintSpeck {
     this.x = Math.random() * this.w
     this.y = Math.random() * this.h
     this.radius = 0.5 + Math.random() * 2.5
-    this.opacity = Math.random() * 0.35
+    this.opacity = Math.random() * 0.2
     this.life = 300 + Math.random() * 500
     this.maxLife = this.life
     this.driftX = (Math.random() - 0.5) * 0.15
@@ -207,7 +207,7 @@ class PaintSpeck {
   draw(ctx) {
     ctx.beginPath()
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2)
-    ctx.fillStyle = `rgba(255,255,255,${this.opacity * (this.life / this.maxLife)})`
+    ctx.fillStyle = `rgba(51,51,51,${this.opacity * (this.life / this.maxLife)})`
     ctx.fill()
   }
 }

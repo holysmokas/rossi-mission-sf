@@ -29,7 +29,7 @@
 .stat-number {
   font-family: 'Dela Gothic One', cursive;
   font-size: 2.5rem;
-  background: linear-gradient(180deg, #fff 0%, #666 100%);
+  background: linear-gradient(180deg, #1a1a1a 0%, #999 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

@@ -1,10 +1,10 @@
 :root {
-  --black: #0a0a0a;
-  --white: #f0f0f0;
-  --gray-dark: #1a1a1a;
-  --gray-mid: #3a3a3a;
-  --gray-light: #888;
-  --accent: #d4d4d4;
+  --black: #fafafa;
+  --white: #1a1a1a;
+  --gray-dark: #f0f0f0;
+  --gray-mid: #d0d0d0;
+  --gray-light: #777;
+  --accent: #444;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -26,7 +26,7 @@ body {
   z-index: 1;
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E");
-  opacity: 0.3;
+  opacity: 0.12;
   animation: grainShift 0.5s steps(3) infinite;
 }
 
@@ -86,7 +86,7 @@ section {
   font-family: 'Dela Gothic One', cursive;
   font-size: clamp(2rem, 5vw, 4rem);
   text-transform: uppercase;
-  background: linear-gradient(180deg, #fff 0%, #555 100%);
+  background: linear-gradient(180deg, #1a1a1a 0%, #999 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
