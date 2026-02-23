@@ -1,128 +1,65 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
+import { supabase } from '../supabaseClient'
 import Reveal from './Reveal'
 import './Newsletter.css'
 
-// REPLACE THIS with your Google Apps Script Web App URL after deploying
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-lFz7BwY9sszfb1DzNksQBcIZD5dKv5ujN_TTuSZprPhhIyx81GMWK4-PBc1xg1oa/exec'
-
 export default function Newsletter() {
   const [email, setEmail] = useState('')
-  const [honeypot, setHoneypot] = useState('')
-  const [status, setStatus] = useState('idle')
-  const [message, setMessage] = useState('')
-  const formTimeRef = useRef(null)
+  const [status, setStatus] = useState(null)
 
-  useEffect(() => {
-    formTimeRef.current = Date.now()
-  }, [])
-
-  const sanitize = (str) => str.replace(/<[^>]*>/g, '').trim()
-
-  const isValidEmail = (val) => {
-    if (val.length > 254) return false
-    return /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/i.test(val)
-  }
-
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault()
-    if (honeypot) return
+    if (!email) return
 
-    const cleanEmail = sanitize(email)
+    setStatus('sending')
 
-    if (!cleanEmail) {
-      setStatus('error')
-      setMessage('Please enter your email.')
-      return
-    }
+    const { error } = await supabase
+      .from('newsletter')
+      .insert([{ email }])
 
-    if (!isValidEmail(cleanEmail)) {
-      setStatus('error')
-      setMessage('Please enter a valid email address.')
-      return
-    }
-
-    setStatus('loading')
-    setMessage('')
-
-    try {
-      const res = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          email: cleanEmail,
-          website: honeypot,
-          _t: formTimeRef.current,
-        }),
-      })
-
-      const data = await res.json()
-
-      if (data.result === 'success') {
-        setStatus('success')
-        setMessage(data.message || 'Welcome to the movement!')
-        setEmail('')
-      } else if (data.result === 'duplicate') {
-        setStatus('duplicate')
-        setMessage(data.message || "You're already subscribed!")
+    if (error) {
+      if (error.code === '23505') {
+        setStatus('exists')
       } else {
         setStatus('error')
-        setMessage(data.message || 'Something went wrong. Please try again.')
       }
-    } catch (err) {
-      setStatus('error')
-      setMessage('Connection error. Please try again.')
+    } else {
+      setStatus('success')
+      setEmail('')
     }
   }
 
   return (
-    <Reveal className="newsletter">
-      <p className="section-label">Stay Connected</p>
-      <h2 className="section-title">Join the<br />Movement</h2>
-      <p className="newsletter-desc">
-        Get early access to drops, exhibition openings, and exclusive releases.
-      </p>
-
-      {status === 'success' || status === 'duplicate' ? (
-        <div className={`newsletter-status ${status}`}>
-          <p>{message}</p>
-        </div>
-      ) : (
-        <div className="newsletter-input">
-          <input
-            type="text"
-            name="website"
-            value={honeypot}
-            onChange={(e) => setHoneypot(e.target.value)}
-            tabIndex={-1}
-            autoComplete="off"
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              left: '-9999px',
-              opacity: 0,
-              height: 0,
-              width: 0,
-              overflow: 'hidden',
-            }}
-          />
-          <input
-            type="email"
-            placeholder="Your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
-            disabled={status === 'loading'}
-            maxLength={254}
-            autoComplete="email"
-          />
-          <button onClick={handleSubmit} disabled={status === 'loading'}>
-            {status === 'loading' ? '...' : 'Subscribe'}
-          </button>
-          {status === 'error' && (
-            <p className="newsletter-error">{message}</p>
+    <section id="newsletter" className="newsletter-section">
+      <div className="newsletter-inner">
+        <Reveal>
+          <p className="section-label">Newsletter</p>
+          <h2 className="section-title">Stay<br />Connected</h2>
+        </Reveal>
+        <Reveal>
+          <form className="newsletter-form" onSubmit={handleSubmit}>
+            <input
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <button type="submit" disabled={status === 'sending'}>
+              {status === 'sending' ? 'Sending...' : 'Subscribe'}
+            </button>
+          </form>
+          {status === 'success' && (
+            <p className="newsletter-msg success">You're in. Welcome to the crew.</p>
           )}
-        </div>
-      )}
-    </Reveal>
+          {status === 'exists' && (
+            <p className="newsletter-msg">Already on the list. We got you.</p>
+          )}
+          {status === 'error' && (
+            <p className="newsletter-msg error">Something went wrong. Try again.</p>
+          )}
+        </Reveal>
+      </div>
+    </section>
   )
 }

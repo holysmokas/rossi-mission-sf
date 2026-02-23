@@ -1,0 +1,62 @@
+.reels-section {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.reels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  justify-items: center;
+}
+
+.reel-embed {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Placeholder cards while no reels are set */
+.reels-placeholder {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.reel-card-placeholder {
+  aspect-ratio: 9 / 16;
+  background: var(--gray-dark);
+  border: 1px solid var(--gray-mid);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.reel-card-placeholder span {
+  width: 60px;
+  height: 60px;
+  border: 2px solid var(--gray-mid);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--gray-mid);
+}
+
+.reel-card-placeholder p {
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gray-mid);
+}
+
+@media (max-width: 768px) {
+  .reels-grid,
+  .reels-placeholder {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+}
