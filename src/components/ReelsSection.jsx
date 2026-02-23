@@ -58,13 +58,6 @@ export default function ReelsSection() {
   return (
     <section id="video" className="reels-section-wrap">
       <div className="reels-section">
-        <Reveal>
-          <div className="reels-header">
-            <p className="section-label">The Culture</p>
-            <h2 className="section-title">See It<br />Live</h2>
-          </div>
-        </Reveal>
-
         {REELS.length > 0 ? (
           <Reveal>
             <div className="reels-grid">
