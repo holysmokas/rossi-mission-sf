@@ -16,14 +16,14 @@ export default function Navbar() {
 
   return (
     <nav className={scrolled ? 'scrolled' : ''}>
-      <a href="#" className="nav-logo">
+      <Link to="/" className="nav-logo">
         <img src={`${import.meta.env.BASE_URL}logo-192.jpeg`} alt="Rossi Mission SF" className="nav-logo-img" />
-      </a>
+      </Link>
       <ul className={`nav-links${menuOpen ? ' open' : ''}`}>
-        <li><a href="#about" onClick={() => setMenuOpen(false)}>About</a></li>
+        <li><Link to="/about" onClick={() => setMenuOpen(false)}>About</Link></li>
         <li><Link to="/shop" onClick={() => setMenuOpen(false)}>Shop</Link></li>
-        <li><a href="#gallery" onClick={() => setMenuOpen(false)}>Gallery</a></li>
-        <li><a href="#visit" onClick={() => setMenuOpen(false)}>Visit</a></li>
+        <li><Link to="/gallery" onClick={() => setMenuOpen(false)}>Gallery</Link></li>
+        <li><Link to="/visit" onClick={() => setMenuOpen(false)}>Visit</Link></li>
         <li className="nav-social-item">
           <SocialIcons className="nav-socials" />
         </li>

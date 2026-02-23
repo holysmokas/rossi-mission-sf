@@ -1,0 +1,56 @@
+.about-page {
+  min-height: 100vh;
+  background: var(--black);
+  color: var(--white);
+  font-family: 'Space Mono', monospace;
+}
+
+.about-page-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 140px 40px 80px;
+}
+
+.about-body {
+  margin-top: 20px;
+}
+
+.about-body p {
+  font-size: 0.9rem;
+  line-height: 2;
+  color: var(--accent);
+  margin-bottom: 24px;
+}
+
+.about-stats-row {
+  display: flex;
+  gap: 48px;
+  margin-top: 60px;
+}
+
+.about-stat {
+  border-left: 1px solid var(--gray-mid);
+  padding-left: 24px;
+}
+
+.about-stat-number {
+  font-family: 'Dela Gothic One', cursive;
+  font-size: 2.5rem;
+  background: linear-gradient(180deg, #1a1a1a 0%, #999 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.about-stat-label {
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gray-light);
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .about-page-content { padding: 100px 20px 60px; }
+  .about-stats-row { flex-direction: column; gap: 32px; }
+}

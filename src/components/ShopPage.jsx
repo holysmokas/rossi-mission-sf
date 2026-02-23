@@ -103,7 +103,6 @@ export default function ShopPage() {
       <header className="shop-page-header">
         <Link to="/" className="shop-back-link">← Back to Site</Link>
         <div className="shop-page-title">
-          <h1>ROSSI</h1>
           <span>Shop</span>
         </div>
         <div className="shop-header-right">
