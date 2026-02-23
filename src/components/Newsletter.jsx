@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase } from '../lib/supabse'
 import Reveal from './Reveal'
 import './Newsletter.css'
 
@@ -33,8 +33,7 @@ export default function Newsletter() {
     <section id="newsletter" className="newsletter-section">
       <div className="newsletter-inner">
         <Reveal>
-          <p className="section-label">Newsletter</p>
-          <h2 className="section-title">Stay<br />Connected</h2>
+          <p className="section-label">Stay Connected</p>
         </Reveal>
         <Reveal>
           <form className="newsletter-form" onSubmit={handleSubmit}>

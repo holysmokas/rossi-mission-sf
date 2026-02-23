@@ -1,6 +1,5 @@
 import GraffitiBackground from './components/GraffitiBackground'
 import Navbar from './components/Navbar'
-import Hero from './components/Hero'
 import ReelsSection from './components/ReelsSection'
 import Newsletter from './components/Newsletter'
 import Footer from './components/Footer'
@@ -13,7 +12,6 @@ export default function Site() {
       <div className="grain" />
       <div className="content">
         <Navbar />
-        <Hero />
         <ReelsSection />
         <Newsletter />
         <Footer />

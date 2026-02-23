@@ -42,7 +42,6 @@ function ReelEmbed({ url }) {
 
 export default function ReelsSection() {
   useEffect(() => {
-    // Load Instagram embed script
     if (REELS.length > 0 && !document.getElementById('ig-embed-script')) {
       const script = document.createElement('script')
       script.id = 'ig-embed-script'
@@ -51,17 +50,20 @@ export default function ReelsSection() {
       document.body.appendChild(script)
     }
 
-    // Re-process embeds if script already loaded
     if (window.instgrm) {
       window.instgrm.Embeds.process()
     }
   }, [])
 
   return (
-    <section id="video">
+    <section id="video" className="reels-section-wrap">
       <div className="reels-section">
-        <Reveal><p className="section-label">The Culture</p></Reveal>
-        <Reveal><h2 className="section-title">See It<br />Live</h2></Reveal>
+        <Reveal>
+          <div className="reels-header">
+            <p className="section-label">The Culture</p>
+            <h2 className="section-title">See It<br />Live</h2>
+          </div>
+        </Reveal>
 
         {REELS.length > 0 ? (
           <Reveal>
