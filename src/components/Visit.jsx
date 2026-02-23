@@ -6,7 +6,6 @@ export default function Visit() {
     <section id="visit">
       <div className="visit-section">
         <Reveal><p className="section-label">Find Us</p></Reveal>
-        <Reveal><h2 className="section-title">Visit<br />The Shop</h2></Reveal>
         <div className="visit-grid">
           <Reveal className="visit-info">
             <h3>Location</h3>
