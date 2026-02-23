@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../supabaseClient'
+import { supabase } from '../lib/supabase'
 import Reveal from './Reveal'
 import './Newsletter.css'
 
