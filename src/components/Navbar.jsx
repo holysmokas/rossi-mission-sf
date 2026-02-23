@@ -17,7 +17,7 @@ export default function Navbar() {
   return (
     <nav className={scrolled ? 'scrolled' : ''}>
       <a href="#" className="nav-logo">
-        <img src={`${import.meta.env.BASE_URL}logo-192.png`} alt="Rossi Mission SF" className="nav-logo-img" />
+        <img src={`${import.meta.env.BASE_URL}logo-192.jpeg`} alt="Rossi Mission SF" className="nav-logo-img" />
       </a>
       <ul className={`nav-links${menuOpen ? ' open' : ''}`}>
         <li><a href="#about" onClick={() => setMenuOpen(false)}>About</a></li>
