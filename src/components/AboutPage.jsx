@@ -16,7 +16,6 @@ export default function AboutPage() {
         <div className="about-page-content">
           <Reveal>
             <p className="section-label">Est. Mission District</p>
-            <h2 className="section-title">Where the<br />Walls Speak</h2>
           </Reveal>
 
           <div className="about-body">

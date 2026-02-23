@@ -18,7 +18,6 @@ export default function GalleryPage() {
         <div className="gallery-page-content">
           <Reveal>
             <p className="section-label">The Gallery</p>
-            <h2 className="section-title">Street to<br />Studio</h2>
           </Reveal>
 
           <div className="gallery-grid-page">

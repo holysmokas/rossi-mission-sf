@@ -172,7 +172,6 @@ export default function VisitPage() {
         <div className="visit-page-content">
           <Reveal>
             <p className="section-label">Find Us</p>
-            <h2 className="section-title">Visit<br />The Shop</h2>
           </Reveal>
 
           <div className="visit-grid">
