@@ -1,20 +1,28 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import Reveal from './Reveal'
 import './ReelsSection.css'
 
-/*
-  HOW TO ADD REELS:
-  1. Go to the Instagram reel on desktop
-  2. Click the three dots (...) → Embed
-  3. Copy the URL (e.g. https://www.instagram.com/reel/ABC123/)
-  4. Add it to the REELS array below
-*/
+// ── ALL 6 REELS ──
+// Rotates automatically every Sunday. Week 0 = reel 1, Week 1 = reel 2, etc.
+// To add more reels, just append URLs to this array.
 const REELS = [
-  // Replace these with real Rossi Mission SF reel URLs:
-  // 'https://www.instagram.com/reel/XXXXXXXXXXX/',
-  // 'https://www.instagram.com/reel/YYYYYYYYYYY/',
-  // 'https://www.instagram.com/reel/ZZZZZZZZZZZ/',
+  'https://www.instagram.com/reel/CmPBAiJpFGC/',
+  'https://www.instagram.com/reel/Cx8YN5dxK2R/',
+  'https://www.instagram.com/reel/DG_1ignyB4x/',
+  'https://www.instagram.com/reel/DH6k71ry1Wd/',
+  'https://www.instagram.com/reel/DJQDmTASNK3/',
+  'https://www.instagram.com/reel/DLYChl2hYxC/',
 ]
+
+// Returns the ISO week number (rotates on Sunday)
+function getWeekIndex() {
+  const now = new Date()
+  // Get the Thursday of the current week to determine week number
+  const jan1 = new Date(now.getFullYear(), 0, 1)
+  const daysSinceJan1 = Math.floor((now - jan1) / 86400000)
+  const weekNumber = Math.floor(daysSinceJan1 / 7)
+  return weekNumber % REELS.length
+}
 
 function ReelEmbed({ url }) {
   return (
@@ -29,7 +37,7 @@ function ReelEmbed({ url }) {
           border: 0,
           borderRadius: '3px',
           boxShadow: 'none',
-          margin: '0',
+          margin: '0 auto',
           maxWidth: '540px',
           minWidth: '326px',
           padding: 0,
@@ -41,49 +49,29 @@ function ReelEmbed({ url }) {
 }
 
 export default function ReelsSection() {
+  const currentReelUrl = useMemo(() => REELS[getWeekIndex()], [])
+
   useEffect(() => {
-    if (REELS.length > 0 && !document.getElementById('ig-embed-script')) {
+    // Load Instagram embed script
+    if (!document.getElementById('ig-embed-script')) {
       const script = document.createElement('script')
       script.id = 'ig-embed-script'
       script.src = 'https://www.instagram.com/embed.js'
       script.async = true
       document.body.appendChild(script)
-    }
-
-    if (window.instgrm) {
+    } else if (window.instgrm) {
       window.instgrm.Embeds.process()
     }
-  }, [])
+  }, [currentReelUrl])
 
   return (
     <section id="video" className="reels-section-wrap">
       <div className="reels-section">
-        {REELS.length > 0 ? (
-          <Reveal>
-            <div className="reels-grid">
-              {REELS.map((url, i) => (
-                <ReelEmbed key={i} url={url} />
-              ))}
-            </div>
-          </Reveal>
-        ) : (
-          <Reveal>
-            <div className="reels-placeholder">
-              <div className="reel-card-placeholder">
-                <span>▶</span>
-                <p>Reels Coming Soon</p>
-              </div>
-              <div className="reel-card-placeholder">
-                <span>▶</span>
-                <p>Reels Coming Soon</p>
-              </div>
-              <div className="reel-card-placeholder">
-                <span>▶</span>
-                <p>Reels Coming Soon</p>
-              </div>
-            </div>
-          </Reveal>
-        )}
+        <Reveal>
+          <div className="reel-single">
+            <ReelEmbed url={currentReelUrl} />
+          </div>
+        </Reveal>
       </div>
     </section>
   )
