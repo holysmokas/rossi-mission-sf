@@ -113,20 +113,26 @@ nav.scrolled {
     align-items: center;
     justify-content: center;
     gap: 40px;
-    z-index: 99;
+    z-index: 200;
   }
 
   .nav-links.open {
     display: flex;
   }
 
+  .nav-links li {
+    display: block;
+    text-align: center;
+  }
+
   .nav-links a {
     font-size: 1.2rem;
+    color: var(--white);
   }
 
   .hamburger {
     display: flex;
-    z-index: 101;
+    z-index: 201;
   }
 
   .nav-social-item {

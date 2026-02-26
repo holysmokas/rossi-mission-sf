@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import ProductForm from './ProductForm'
 import BulkUpload from './BulkUpload'
@@ -114,7 +114,10 @@ export default function AdminDashboard() {
           <h1 className="admin-title">ROSSI ADMIN</h1>
           <a href="/" target="_blank" rel="noopener noreferrer" className="admin-view-site">View Site →</a>
         </div>
-        <button onClick={handleLogout} className="admin-btn ghost">Sign Out</button>
+        <div className="admin-header-actions">
+          <Link to="/admin/account" className="admin-btn ghost small">Account</Link>
+          <button onClick={handleLogout} className="admin-btn ghost small">Sign Out</button>
+        </div>
       </header>
 
       <div className="admin-stats">

@@ -8,6 +8,7 @@ import VisitPage from './components/VisitPage'
 import CheckoutSuccess from './components/CheckoutSuccess'
 import AdminLogin from './admin/AdminLogin'
 import AdminDashboard from './admin/AdminDashboard'
+import AdminAccount from './admin/AdminAccount'
 import AdminRoute from './admin/AdminRoute'
 
 export default function App() {
@@ -25,6 +26,11 @@ export default function App() {
           <Route path="/admin/dashboard" element={
             <AdminRoute>
               <AdminDashboard />
+            </AdminRoute>
+          } />
+          <Route path="/admin/account" element={
+            <AdminRoute>
+              <AdminAccount />
             </AdminRoute>
           } />
         </Routes>

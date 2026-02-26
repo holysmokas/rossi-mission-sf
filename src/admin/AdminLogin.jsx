@@ -13,9 +13,19 @@ export default function AdminLogin() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    // Check if already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) navigate('/admin/dashboard')
     })
+
+    // Listen for auth changes (handles email confirmation redirect)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        navigate('/admin/dashboard')
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [navigate])
 
   const handleSubmit = async (e) => {
@@ -25,25 +35,31 @@ export default function AdminLogin() {
     setLoading(true)
 
     if (isSignUp) {
-      const { error: signUpError } = await supabase.auth.signUp({
+      // Get the site origin for redirect
+      const redirectUrl = `${window.location.origin}/admin`
+
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: redirectUrl,
+        },
       })
 
       if (signUpError) {
         setError(signUpError.message)
-      } else {
-        setMessage('Account created! Signing you in...')
-        // Auto sign-in after signup
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (signInError) {
-          setError(signInError.message)
-        } else {
-          navigate('/admin/dashboard')
-        }
+      } else if (data?.user?.identities?.length === 0) {
+        // User already exists but hasn't confirmed
+        setError('An account with this email already exists. Check your inbox for a confirmation link.')
+      } else if (data?.user && !data?.session) {
+        // Signup successful, email confirmation required
+        setMessage('Account created! Check your email and click the confirmation link to activate your account. Then come back here to sign in.')
+        setEmail('')
+        setPassword('')
+        setIsSignUp(false) // Switch to sign-in view so they can log in after confirming
+      } else if (data?.session) {
+        // No email confirmation required — auto signed in
+        navigate('/admin/dashboard')
       }
     } else {
       const { error: authError } = await supabase.auth.signInWithPassword({
@@ -52,7 +68,11 @@ export default function AdminLogin() {
       })
 
       if (authError) {
-        setError(authError.message)
+        if (authError.message.includes('Email not confirmed')) {
+          setError('Your email is not confirmed yet. Check your inbox for a confirmation link.')
+        } else {
+          setError(authError.message)
+        }
       } else {
         navigate('/admin/dashboard')
       }

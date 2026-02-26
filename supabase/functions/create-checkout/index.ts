@@ -1,11 +1,11 @@
 // supabase/functions/create-checkout/index.ts
 // Deploy with: supabase functions deploy create-checkout
-// Set secrets:
-//   supabase secrets set SQUARE_ACCESS_TOKEN=your_token
-//   supabase secrets set SQUARE_LOCATION_ID=your_location_id
-//   supabase secrets set SQUARE_ENVIRONMENT=sandbox  (or 'production')
+// Secrets needed:
+//   SQUARE_ACCESS_TOKEN, SQUARE_LOCATION_ID, SQUARE_ENVIRONMENT
+//   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (auto-set by Supabase)
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,6 +50,10 @@ serve(async (req) => {
       },
     }))
 
+    // Calculate total
+    const totalCents = items.reduce((sum, item) => sum + Math.round(item.price * 100) * item.quantity, 0)
+    const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
+
     // Create payment link via Square Checkout API
     const response = await fetch(`${baseUrl}/v2/online-checkout/payment-links`, {
       method: 'POST',
@@ -81,10 +85,41 @@ serve(async (req) => {
       )
     }
 
+    const squareOrderId = data.payment_link?.order_id
+    const checkoutUrl = data.payment_link?.url || data.payment_link?.long_url
+
+    // ── Save pending order to Supabase ──
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+      if (supabaseUrl && supabaseKey) {
+        const sb = createClient(supabaseUrl, supabaseKey)
+
+        await sb.from('orders').insert({
+          square_order_id: squareOrderId,
+          status: 'pending',
+          items: items.map((item) => ({
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            size: item.size || null,
+            image_url: item.image_url || null,
+          })),
+          item_count: itemCount,
+          total_cents: totalCents,
+          currency: 'USD',
+        })
+      }
+    } catch (dbErr) {
+      // Don't block checkout if DB save fails
+      console.error('Failed to save order to Supabase:', dbErr)
+    }
+
     return new Response(
       JSON.stringify({
-        url: data.payment_link?.url || data.payment_link?.long_url,
-        order_id: data.payment_link?.order_id,
+        url: checkoutUrl,
+        order_id: squareOrderId,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
