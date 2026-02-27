@@ -18,11 +18,11 @@ const SUBCATEGORIES = {
   limited_editions: ['jackets', 'tees', 'art', 'collabs'],
 }
 
-const STOCK_OPTIONS = [
-  { value: 'in_stock', label: 'In Stock' },
-  { value: 'low_stock', label: 'Low Stock' },
-  { value: 'sold_out', label: 'Sold Out' },
-]
+function stockLabel(qty) {
+  if (qty <= 0) return { text: 'Sold Out', cls: 'sold_out' }
+  if (qty <= 5) return { text: 'Low Stock', cls: 'low_stock' }
+  return { text: 'In Stock', cls: 'in_stock' }
+}
 
 export default function ProductForm({ product, onClose }) {
   const isEdit = !!product
@@ -35,7 +35,7 @@ export default function ProductForm({ product, onClose }) {
     category: product?.category || 'art',
     subcategory: product?.subcategory || '',
     artist: product?.artist || '',
-    stock_status: product?.stock_status || 'in_stock',
+    quantity: product?.quantity ?? 0,
     featured: product?.featured || false,
     active: product?.active ?? true,
     sizes: product?.sizes?.join(', ') || '',
@@ -48,6 +48,8 @@ export default function ProductForm({ product, onClose }) {
   const [error, setError] = useState('')
   const [imagePreview, setImagePreview] = useState(product?.image_url || '')
 
+  const stockInfo = stockLabel(form.quantity)
+
   function updateField(field, value) {
     setForm(prev => ({ ...prev, [field]: value }))
   }
@@ -56,7 +58,6 @@ export default function ProductForm({ product, onClose }) {
     const file = e.target.files[0]
     if (!file) return
 
-    // Validate
     if (!file.type.startsWith('image/')) {
       setError('Please upload an image file.')
       return
@@ -69,7 +70,6 @@ export default function ProductForm({ product, onClose }) {
     setUploading(true)
     setError('')
 
-    // Create unique filename
     const ext = file.name.split('.').pop()
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
     const filePath = `${form.category}/${fileName}`
@@ -100,6 +100,9 @@ export default function ProductForm({ product, onClose }) {
     if (!form.name.trim()) { setError('Product name is required.'); return }
     if (!form.price || isNaN(form.price) || Number(form.price) <= 0) { setError('Valid price is required.'); return }
 
+    const qty = parseInt(form.quantity, 10)
+    if (isNaN(qty) || qty < 0) { setError('Quantity must be 0 or more.'); return }
+
     setSaving(true)
 
     const payload = {
@@ -109,12 +112,29 @@ export default function ProductForm({ product, onClose }) {
       category: form.category,
       subcategory: form.subcategory.trim() || null,
       artist: form.artist.trim() || null,
-      stock_status: form.stock_status,
+      quantity: qty,
       featured: form.featured,
       active: form.active,
       sizes: form.sizes ? form.sizes.split(',').map(s => s.trim()).filter(Boolean) : [],
       tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
       image_url: form.image_url || null,
+    }
+
+    // Log inventory change if editing and quantity changed
+    if (isEdit && product.quantity !== qty) {
+      try {
+        await supabase.from('inventory_log').insert({
+          product_id: product.id,
+          product_name: form.name.trim(),
+          change_type: qty > product.quantity ? 'restock' : 'adjustment',
+          quantity_before: product.quantity,
+          quantity_after: qty,
+          change_amount: qty - product.quantity,
+          note: qty > product.quantity ? 'Manual restock' : 'Manual adjustment',
+        })
+      } catch (logErr) {
+        console.error('Failed to log inventory change:', logErr)
+      }
     }
 
     let result
@@ -127,6 +147,33 @@ export default function ProductForm({ product, onClose }) {
       result = await supabase
         .from('products')
         .insert([payload])
+
+      // Log initial stock for new products
+      if (!result.error && qty > 0) {
+        try {
+          // Get the new product ID
+          const { data: newProducts } = await supabase
+            .from('products')
+            .select('id')
+            .eq('name', form.name.trim())
+            .order('created_at', { ascending: false })
+            .limit(1)
+
+          if (newProducts?.[0]) {
+            await supabase.from('inventory_log').insert({
+              product_id: newProducts[0].id,
+              product_name: form.name.trim(),
+              change_type: 'initial',
+              quantity_before: 0,
+              quantity_after: qty,
+              change_amount: qty,
+              note: 'Initial stock',
+            })
+          }
+        } catch (logErr) {
+          console.error('Failed to log initial inventory:', logErr)
+        }
+      }
     }
 
     if (result.error) {
@@ -164,10 +211,17 @@ export default function ProductForm({ product, onClose }) {
                   <input type="number" step="0.01" min="0" value={form.price} onChange={(e) => updateField('price', e.target.value)} placeholder="0.00" />
                 </div>
                 <div className="admin-field">
-                  <label>Stock Status</label>
-                  <select value={form.stock_status} onChange={(e) => updateField('stock_status', e.target.value)}>
-                    {STOCK_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
+                  <label>Quantity *</label>
+                  <div className="qty-input-wrap">
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.quantity}
+                      onChange={(e) => updateField('quantity', e.target.value)}
+                      placeholder="0"
+                    />
+                    <span className={`qty-status-badge ${stockInfo.cls}`}>{stockInfo.text}</span>
+                  </div>
                 </div>
               </div>
 
