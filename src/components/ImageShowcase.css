@@ -1,0 +1,103 @@
+/* ===== IMAGE SHOWCASE ===== */
+.showcase-section {
+    padding-top: 120px;
+}
+
+.showcase-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+/* ── Grid Layouts ── */
+.showcase-grid {
+    display: grid;
+    gap: 4px;
+}
+
+/* 1 image: single centered */
+.showcase-grid.count-1 {
+    grid-template-columns: 1fr;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* 2 images: side by side */
+.showcase-grid.count-2 {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* 3 images: first large, two stacked on right */
+.showcase-grid.count-3 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+/* 4 images: 2x2 grid */
+.showcase-grid.count-4 {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* 5-6 images: 3 column grid, first spans 2 cols */
+.showcase-grid.count-5,
+.showcase-grid.count-6 {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* ── Items ── */
+.showcase-item {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 1;
+    background: var(--gray-dark);
+    border: 1px solid var(--gray-mid);
+    cursor: pointer;
+}
+
+.showcase-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s;
+    filter: grayscale(0.15);
+}
+
+.showcase-item:hover img {
+    transform: scale(1.05);
+    filter: grayscale(0);
+}
+
+/* Large first item for 3+ images */
+.showcase-item-large {
+    grid-row: span 2;
+    aspect-ratio: auto;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .showcase-section {
+        padding-top: 80px;
+    }
+
+    .showcase-inner {
+        padding: 0 12px;
+    }
+
+    .showcase-grid.count-2,
+    .showcase-grid.count-3,
+    .showcase-grid.count-4 {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .showcase-grid.count-5,
+    .showcase-grid.count-6 {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .showcase-item-large {
+        grid-column: span 2;
+        grid-row: span 1;
+        aspect-ratio: 16 / 9;
+    }
+}
