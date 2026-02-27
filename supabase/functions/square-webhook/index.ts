@@ -443,7 +443,7 @@ View full details: https://squareup.com/dashboard/sales/transactions
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              from: 'Rossi Mission SF <orders@rossimissionsf.com>',
+              from: 'Rossi Mission SF <orders@milanilabs.com>',
               to: [toEmail],
               subject: `New Order — $${totalDollars} — ${customerName || 'Customer'}`,
               text: emailBody,
