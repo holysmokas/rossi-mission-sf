@@ -13,7 +13,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const NOTIFY_EMAILS = [
   'holysmokasthatscheap@gmail.com',
-  'info@rossimissionsf.com',
+  'sahar@rossimissionsf.com',
 ]
 
 // Helper: pause execution
