@@ -16,7 +16,12 @@ const NOTIFY_EMAILS = [
   'info@rossimissionsf.com',
 ]
 
-// ── Helper: extract address from Square address object ──
+// Helper: pause execution
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// Helper: extract address from Square address object
 function parseSquareAddress(addr) {
   if (!addr) return null
   const line1 = addr.address_line_1 || addr.addressLine1 || ''
@@ -29,6 +34,71 @@ function parseSquareAddress(addr) {
     zip: addr.postal_code || addr.postalCode || '',
     country: addr.country || 'US',
   }
+}
+
+// Helper: fetch order from Square with retry
+async function fetchSquareOrder(baseUrl, orderId, accessToken, attempt = 1) {
+  console.log(`[Attempt ${attempt}] Fetching order ${orderId}...`)
+
+  const res = await fetch(`${baseUrl}/v2/orders/${orderId}`, {
+    headers: {
+      'Square-Version': '2025-01-23',
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  const data = await res.json()
+
+  if (data.errors) {
+    console.error(`[Attempt ${attempt}] Order fetch errors:`, JSON.stringify(data.errors))
+    return null
+  }
+
+  const order = data.order
+  if (!order) {
+    console.error(`[Attempt ${attempt}] No order in response`)
+    return null
+  }
+
+  // Log the FULL order structure for debugging
+  console.log(`[Attempt ${attempt}] Order state: ${order.state}`)
+  console.log(`[Attempt ${attempt}] Fulfillments count: ${order.fulfillments?.length || 0}`)
+
+  if (order.fulfillments) {
+    for (let i = 0; i < order.fulfillments.length; i++) {
+      const f = order.fulfillments[i]
+      console.log(`[Attempt ${attempt}] Fulfillment[${i}] type=${f.type} state=${f.state}`)
+
+      if (f.shipment_details) {
+        console.log(`[Attempt ${attempt}] Fulfillment[${i}] shipment_details.recipient:`,
+          JSON.stringify(f.shipment_details.recipient || 'NULL'))
+      }
+
+      if (f.delivery_details) {
+        console.log(`[Attempt ${attempt}] Fulfillment[${i}] delivery_details.recipient:`,
+          JSON.stringify(f.delivery_details.recipient || 'NULL'))
+      }
+    }
+  } else {
+    console.log(`[Attempt ${attempt}] NO fulfillments on order`)
+  }
+
+  // Check if fulfillment has shipping address
+  const hasAddress = order.fulfillments?.some((f) => {
+    const recipient = f.shipment_details?.recipient || f.delivery_details?.recipient
+    return recipient?.address?.address_line_1
+  })
+
+  // If no address found and this is attempt 1 or 2, retry after delay
+  if (!hasAddress && attempt < 3) {
+    const delayMs = attempt * 3000 // 3s, 6s
+    console.log(`[Attempt ${attempt}] No shipping address found yet, retrying in ${delayMs}ms...`)
+    await sleep(delayMs)
+    return fetchSquareOrder(baseUrl, orderId, accessToken, attempt + 1)
+  }
+
+  return order
 }
 
 serve(async (req) => {
@@ -67,6 +137,7 @@ serve(async (req) => {
 
     // ── Only handle payment.updated events ──
     if (event.type !== 'payment.updated') {
+      console.log('Skipping event type:', event.type)
       return new Response(JSON.stringify({ received: true, skipped: event.type }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -80,6 +151,7 @@ serve(async (req) => {
 
     // ── Only proceed if payment status is COMPLETED ──
     if (payment.status !== 'COMPLETED') {
+      console.log('Skipping payment status:', payment.status)
       return new Response(JSON.stringify({ received: true, skipped: `status: ${payment.status}` }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -92,9 +164,18 @@ serve(async (req) => {
     const amountCents = payment.amount_money?.amount || 0
     const currency = payment.amount_money?.currency || 'USD'
 
-    console.log('=== PAYMENT COMPLETED ===')
+    console.log('========================================')
+    console.log('PAYMENT COMPLETED')
     console.log('Order ID:', squareOrderId)
     console.log('Payment ID:', squarePaymentId)
+    console.log('Amount:', amountCents, currency)
+    console.log('========================================')
+
+    // Log the full payment object to see what's available
+    console.log('PAYMENT OBJECT KEYS:', Object.keys(payment))
+    console.log('payment.shipping_address:', JSON.stringify(payment.shipping_address || 'NOT PRESENT'))
+    console.log('payment.buyer_email_address:', payment.buyer_email_address || 'NOT PRESENT')
+    console.log('payment.customer_id:', payment.customer_id || 'NOT PRESENT')
 
     // ── Init Supabase client ──
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -110,6 +191,7 @@ serve(async (req) => {
         .single()
 
       if (existingOrder?.notified) {
+        console.log('Already notified, skipping')
         return new Response(JSON.stringify({ received: true, skipped: 'already notified' }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -118,7 +200,7 @@ serve(async (req) => {
     }
 
     // ══════════════════════════════════════════
-    // COLLECT SHIPPING ADDRESS FROM ALL SOURCES
+    // COLLECT ALL DATA
     // ══════════════════════════════════════════
     const SQUARE_ACCESS_TOKEN = Deno.env.get('SQUARE_ACCESS_TOKEN')
     const SQUARE_ENV = Deno.env.get('SQUARE_ENVIRONMENT') || 'sandbox'
@@ -127,120 +209,83 @@ serve(async (req) => {
       : 'https://connect.squareupsandbox.com'
 
     let customerName = ''
-    let customerEmail = ''
+    let customerEmail = payment.buyer_email_address || ''
     let shippingAddress = null
     let lineItems = []
 
-    // ── SOURCE 1: Payment object itself ──
-    // Square Payment Links often put shipping_address directly on the payment
-    console.log('--- Checking payment object for shipping ---')
-    console.log('payment.shipping_address:', JSON.stringify(payment.shipping_address))
-    console.log('payment.buyer_email_address:', payment.buyer_email_address)
-
+    // ── SOURCE 1: Payment object shipping_address ──
     if (payment.shipping_address) {
       shippingAddress = parseSquareAddress(payment.shipping_address)
-      console.log('>> Found shipping on payment object:', JSON.stringify(shippingAddress))
+      if (shippingAddress) {
+        console.log('✅ SOURCE 1: Found shipping on payment object:', JSON.stringify(shippingAddress))
+      }
     }
 
-    if (payment.buyer_email_address) {
-      customerEmail = payment.buyer_email_address
-    }
-
-    // ── SOURCE 2: Fetch the full Order from Square ──
+    // ── SOURCE 2: Fetch Order (with 3s delay + retry for race condition) ──
     if (squareOrderId && SQUARE_ACCESS_TOKEN) {
+      // Wait 3 seconds before first fetch — gives Square time to populate fulfillment
+      console.log('Waiting 3s before fetching order (race condition workaround)...')
+      await sleep(3000)
+
       try {
-        // Use batch-retrieve for more complete data
-        const orderRes = await fetch(`${baseUrl}/v2/orders/batch-retrieve`, {
-          method: 'POST',
-          headers: {
-            'Square-Version': '2025-01-23',
-            'Authorization': `Bearer ${SQUARE_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            location_id: Deno.env.get('SQUARE_LOCATION_ID') || undefined,
-            order_ids: [squareOrderId],
-          }),
-        })
-        const orderData = await orderRes.json()
-        const orderDetails = orderData.orders?.[0]
+        const order = await fetchSquareOrder(baseUrl, squareOrderId, SQUARE_ACCESS_TOKEN)
 
-        console.log('--- Full order response keys ---')
-        if (orderDetails) {
-          console.log('Order keys:', Object.keys(orderDetails))
-          console.log('Fulfillments count:', orderDetails.fulfillments?.length || 0)
-
+        if (order) {
           // Extract line items
-          lineItems = (orderDetails.line_items || []).map((li) => ({
+          lineItems = (order.line_items || []).map((li) => ({
             name: li.name,
             quantity: parseInt(li.quantity, 10),
             price: (li.base_price_money?.amount || 0) / 100,
           }))
 
-          // ── SOURCE 2a: Order fulfillments ──
-          if (orderDetails.fulfillments && orderDetails.fulfillments.length > 0) {
-            for (const fulfillment of orderDetails.fulfillments) {
-              console.log('Fulfillment type:', fulfillment.type)
-              console.log('Fulfillment state:', fulfillment.state)
-
-              // SHIPMENT type (most common for Payment Links with shipping)
-              if (fulfillment.shipment_details?.recipient) {
-                const recipient = fulfillment.shipment_details.recipient
-                console.log('Shipment recipient:', JSON.stringify(recipient))
-
-                if (!customerName && recipient.display_name) {
-                  customerName = recipient.display_name
+          // Check all fulfillments for shipping address
+          if (order.fulfillments) {
+            for (const fulfillment of order.fulfillments) {
+              // SHIPMENT type
+              const shipRecipient = fulfillment.shipment_details?.recipient
+              if (shipRecipient) {
+                if (!customerName && shipRecipient.display_name) {
+                  customerName = shipRecipient.display_name
                 }
-                if (!customerEmail && recipient.email_address) {
-                  customerEmail = recipient.email_address
+                if (!customerEmail && shipRecipient.email_address) {
+                  customerEmail = shipRecipient.email_address
                 }
-                if (!shippingAddress && recipient.address) {
-                  shippingAddress = parseSquareAddress(recipient.address)
-                  console.log('>> Found shipping in shipment fulfillment:', JSON.stringify(shippingAddress))
+                if (!shippingAddress && shipRecipient.address) {
+                  shippingAddress = parseSquareAddress(shipRecipient.address)
+                  if (shippingAddress) {
+                    console.log('✅ SOURCE 2a: Found shipping in SHIPMENT fulfillment:', JSON.stringify(shippingAddress))
+                  }
                 }
               }
 
-              // DELIVERY type (alternative fulfillment structure)
-              if (fulfillment.delivery_details?.recipient) {
-                const recipient = fulfillment.delivery_details.recipient
-                console.log('Delivery recipient:', JSON.stringify(recipient))
-
-                if (!customerName && recipient.display_name) {
-                  customerName = recipient.display_name
+              // DELIVERY type
+              const delRecipient = fulfillment.delivery_details?.recipient
+              if (delRecipient) {
+                if (!customerName && delRecipient.display_name) {
+                  customerName = delRecipient.display_name
                 }
-                if (!customerEmail && recipient.email_address) {
-                  customerEmail = recipient.email_address
+                if (!customerEmail && delRecipient.email_address) {
+                  customerEmail = delRecipient.email_address
                 }
-                if (!shippingAddress && recipient.address) {
-                  shippingAddress = parseSquareAddress(recipient.address)
-                  console.log('>> Found shipping in delivery fulfillment:', JSON.stringify(shippingAddress))
+                if (!shippingAddress && delRecipient.address) {
+                  shippingAddress = parseSquareAddress(delRecipient.address)
+                  if (shippingAddress) {
+                    console.log('✅ SOURCE 2b: Found shipping in DELIVERY fulfillment:', JSON.stringify(shippingAddress))
+                  }
                 }
               }
             }
           }
-
-          // ── SOURCE 2b: Order-level net amounts / recipient (some Square versions) ──
-          if (orderDetails.recipient?.address && !shippingAddress) {
-            shippingAddress = parseSquareAddress(orderDetails.recipient.address)
-            console.log('>> Found shipping on order.recipient:', JSON.stringify(shippingAddress))
-          }
-
-          // ── SOURCE 2c: Order metadata/note ──
-          if (orderDetails.metadata) {
-            console.log('Order metadata:', JSON.stringify(orderDetails.metadata))
-          }
-        } else {
-          console.log('No order details returned. Response:', JSON.stringify(orderData))
         }
       } catch (fetchErr) {
-        console.error('Failed to fetch Square order:', fetchErr)
+        console.error('Failed to fetch order:', fetchErr)
       }
     }
 
-    // ── SOURCE 3: Fetch Customer record if we have a customer_id ──
+    // ── SOURCE 3: Fetch Customer record ──
     if (!shippingAddress && payment.customer_id && SQUARE_ACCESS_TOKEN) {
       try {
-        console.log('--- Fetching customer record:', payment.customer_id, '---')
+        console.log('SOURCE 3: Fetching customer record:', payment.customer_id)
         const custRes = await fetch(`${baseUrl}/v2/customers/${payment.customer_id}`, {
           headers: {
             'Square-Version': '2025-01-23',
@@ -251,18 +296,17 @@ serve(async (req) => {
         const customer = custData.customer
 
         if (customer) {
-          console.log('Customer data keys:', Object.keys(customer))
-
           if (!customerName) {
             customerName = [customer.given_name, customer.family_name].filter(Boolean).join(' ')
           }
           if (!customerEmail && customer.email_address) {
             customerEmail = customer.email_address
           }
-          // Customer address
           if (customer.address) {
             shippingAddress = parseSquareAddress(customer.address)
-            console.log('>> Found shipping on customer record:', JSON.stringify(shippingAddress))
+            if (shippingAddress) {
+              console.log('✅ SOURCE 3: Found address on customer record:', JSON.stringify(shippingAddress))
+            }
           }
         }
       } catch (custErr) {
@@ -270,17 +314,21 @@ serve(async (req) => {
       }
     }
 
-    // ── SOURCE 4: Check the payment tender for card details (billing as fallback) ──
+    // ── SOURCE 4: Billing address as last resort ──
     if (!shippingAddress && payment.card_details?.card?.billing_address) {
       shippingAddress = parseSquareAddress(payment.card_details.card.billing_address)
-      console.log('>> Fallback: Using billing address from card:', JSON.stringify(shippingAddress))
+      if (shippingAddress) {
+        console.log('⚠ SOURCE 4 FALLBACK: Using billing address:', JSON.stringify(shippingAddress))
+      }
     }
 
-    console.log('=== FINAL RESULTS ===')
-    console.log('Customer Name:', customerName)
-    console.log('Customer Email:', customerEmail)
-    console.log('Shipping Address:', JSON.stringify(shippingAddress))
+    console.log('========================================')
+    console.log('FINAL RESULTS')
+    console.log('Customer Name:', customerName || '(empty)')
+    console.log('Customer Email:', customerEmail || '(empty)')
+    console.log('Shipping Address:', JSON.stringify(shippingAddress) || 'NULL')
     console.log('Line Items:', lineItems.length)
+    console.log('========================================')
 
     // ── Update order in Supabase ──
     let savedItems = lineItems
@@ -348,8 +396,7 @@ serve(async (req) => {
         })
         .join('\n')
 
-      // Build shipping block with clear messaging
-      let shippingBlock = '⚠ Not collected — check Square Dashboard'
+      let shippingBlock = '⚠ NOT COLLECTED — Square did not return a shipping address.\nCheck Square Dashboard → Sales → Transactions for this order.'
       if (shippingAddress && shippingAddress.line1) {
         const parts = [shippingAddress.line1]
         if (shippingAddress.line2) parts.push(shippingAddress.line2)
@@ -403,9 +450,9 @@ View full details: https://squareup.com/dashboard/sales/transactions
             }),
           })
           const emailResult = await emailRes.json()
-          console.log(`Email to ${toEmail}:`, JSON.stringify(emailResult))
+          console.log(`Email sent to ${toEmail}:`, JSON.stringify(emailResult))
         } catch (emailErr) {
-          console.error(`Failed to send notification to ${toEmail}:`, emailErr)
+          console.error(`Failed to send to ${toEmail}:`, emailErr)
         }
       }
 
