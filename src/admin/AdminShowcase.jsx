@@ -2,6 +2,51 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import './Admin.css'
 
+// ── Client-side image compression ──
+function compressImage(file, maxWidth = 1200, quality = 0.8) {
+    return new Promise((resolve) => {
+        if (!file.type.startsWith('image/')) {
+            resolve(file)
+            return
+        }
+
+        const img = new Image()
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+
+        img.onload = () => {
+            let { width, height } = img
+
+            if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width)
+                width = maxWidth
+            }
+
+            canvas.width = width
+            canvas.height = height
+            ctx.drawImage(img, 0, 0, width, height)
+
+            canvas.toBlob(
+                (blob) => {
+                    const compressed = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    })
+                    console.log(
+                        `Compressed: ${file.name} — ${(file.size / 1024).toFixed(0)}KB → ${(compressed.size / 1024).toFixed(0)}KB`
+                    )
+                    resolve(compressed)
+                },
+                'image/jpeg',
+                quality
+            )
+        }
+
+        img.onerror = () => resolve(file)
+        img.src = URL.createObjectURL(file)
+    })
+}
+
 export default function AdminShowcase() {
     const [images, setImages] = useState([])
     const [loading, setLoading] = useState(true)
@@ -32,40 +77,42 @@ export default function AdminShowcase() {
         const files = Array.from(e.target.files)
         if (files.length === 0) return
 
-        const imageFiles = files.filter(f => f.type.startsWith('image/'))
+        const imageFiles = files.filter((f) => f.type.startsWith('image/'))
         if (imageFiles.length === 0) {
             alert('Please select image files only.')
             return
         }
 
         setUploading(true)
-        const maxOrder = images.length > 0 ? Math.max(...images.map(i => i.sort_order)) : -1
+        const maxOrder = images.length > 0 ? Math.max(...images.map((i) => i.sort_order)) : -1
         let uploaded = 0
+        let failed = 0
 
         for (const file of imageFiles) {
-            setUploadProgress(`Uploading ${uploaded + 1} of ${imageFiles.length}...`)
+            setUploadProgress(`Compressing & uploading ${uploaded + 1} of ${imageFiles.length}...`)
 
-            const ext = file.name.split('.').pop()
-            const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
-            const storagePath = `showcase/${fileName}`
+            const compressed = await compressImage(file, 1200, 0.8)
 
-            // Upload to Supabase Storage
+            const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`
+
             const { error: uploadError } = await supabase.storage
                 .from('showcase')
-                .upload(fileName, file, { cacheControl: '3600' })
+                .upload(fileName, compressed, {
+                    cacheControl: '3600',
+                    contentType: 'image/jpeg',
+                })
 
             if (uploadError) {
                 console.error('Upload failed:', file.name, uploadError)
+                failed++
                 continue
             }
 
-            // Get public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from('showcase')
-                .getPublicUrl(fileName)
+            const {
+                data: { publicUrl },
+            } = supabase.storage.from('showcase').getPublicUrl(fileName)
 
-            // Save to database
-            await supabase.from('showcase_images').insert({
+            const { error: dbError } = await supabase.from('showcase_images').insert({
                 image_url: publicUrl,
                 storage_path: fileName,
                 file_name: file.name,
@@ -73,36 +120,40 @@ export default function AdminShowcase() {
                 active: true,
             })
 
+            if (dbError) {
+                console.error('DB insert failed:', file.name, dbError)
+                failed++
+                continue
+            }
+
             uploaded++
         }
 
         setUploadProgress('')
         setUploading(false)
         fileRef.current.value = ''
+
+        if (failed > 0) {
+            alert(`Uploaded ${uploaded} image${uploaded !== 1 ? 's' : ''}. ${failed} failed — check console for details.`)
+        }
+
         fetchImages()
     }
 
     async function toggleActive(image) {
-        await supabase
-            .from('showcase_images')
-            .update({ active: !image.active })
-            .eq('id', image.id)
+        await supabase.from('showcase_images').update({ active: !image.active }).eq('id', image.id)
         fetchImages()
     }
 
     async function deleteImage(image) {
-        if (!window.confirm(`Delete this image? This cannot be undone.`)) return
+        if (!window.confirm('Delete this image? This cannot be undone.')) return
 
-        // Remove from storage
         await supabase.storage.from('showcase').remove([image.storage_path])
-
-        // Remove from database
         await supabase.from('showcase_images').delete().eq('id', image.id)
 
         fetchImages()
     }
 
-    // Drag and drop reordering
     function handleDragStart(index) {
         dragItem.current = index
     }
@@ -119,16 +170,11 @@ export default function AdminShowcase() {
         const [removed] = reordered.splice(dragItem.current, 1)
         reordered.splice(dragOver.current, 0, removed)
 
-        // Update local state immediately
         setImages(reordered)
 
-        // Batch update sort_order in database
         for (let i = 0; i < reordered.length; i++) {
             if (reordered[i].sort_order !== i) {
-                await supabase
-                    .from('showcase_images')
-                    .update({ sort_order: i })
-                    .eq('id', reordered[i].id)
+                await supabase.from('showcase_images').update({ sort_order: i }).eq('id', reordered[i].id)
             }
         }
 
@@ -136,7 +182,6 @@ export default function AdminShowcase() {
         dragOver.current = null
     }
 
-    // Move up/down buttons (alternative to drag)
     async function moveImage(index, direction) {
         const newIndex = index + direction
         if (newIndex < 0 || newIndex >= images.length) return
@@ -147,12 +192,11 @@ export default function AdminShowcase() {
 
         setImages(reordered)
 
-        // Update both swapped items
         await supabase.from('showcase_images').update({ sort_order: newIndex }).eq('id', removed.id)
         await supabase.from('showcase_images').update({ sort_order: index }).eq('id', reordered[index].id)
     }
 
-    const activeCount = images.filter(i => i.active).length
+    const activeCount = images.filter((i) => i.active).length
     const cycleDays = activeCount * 3
 
     return (
@@ -164,26 +208,17 @@ export default function AdminShowcase() {
                     </p>
                 </div>
                 <div className="admin-toolbar-actions">
-                    <button
-                        className="admin-btn primary"
-                        onClick={() => fileRef.current?.click()}
-                        disabled={uploading}
-                    >
+                    <button className="admin-btn primary" onClick={() => fileRef.current?.click()} disabled={uploading}>
                         {uploading ? uploadProgress : '+ Upload Images'}
                     </button>
-                    <input
-                        ref={fileRef}
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleUpload}
-                        style={{ display: 'none' }}
-                    />
+                    <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleUpload} style={{ display: 'none' }} />
                 </div>
             </div>
 
             {loading ? (
-                <div className="admin-loading"><p>Loading showcase images...</p></div>
+                <div className="admin-loading">
+                    <p>Loading showcase images...</p>
+                </div>
             ) : images.length === 0 ? (
                 <div className="showcase-empty">
                     <div className="showcase-empty-icon">🖼</div>
@@ -230,17 +265,11 @@ export default function AdminShowcase() {
                                     </button>
                                 </div>
 
-                                <button
-                                    className={`toggle-btn ${img.active ? 'on' : 'off'}`}
-                                    onClick={() => toggleActive(img)}
-                                >
+                                <button className={`toggle-btn ${img.active ? 'on' : 'off'}`} onClick={() => toggleActive(img)}>
                                     {img.active ? 'Active' : 'Hidden'}
                                 </button>
 
-                                <button
-                                    className="admin-btn small danger"
-                                    onClick={() => deleteImage(img)}
-                                >
+                                <button className="admin-btn small danger" onClick={() => deleteImage(img)}>
                                     Delete
                                 </button>
                             </div>
