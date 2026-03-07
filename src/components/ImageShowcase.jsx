@@ -1,31 +1,50 @@
-import Reveal from './Reveal'
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 import './ImageShowcase.css'
 
-// ── ADD YOUR IMAGES HERE ──
-// Drop image files into public/images/ and list them below.
-// Supports any number of images.
-const IMAGES = [
-    // { src: '/images/photo-1.jpg', alt: 'Description' },
-    // { src: '/images/photo-2.jpg', alt: 'Description' },
-    // { src: '/images/photo-3.jpg', alt: 'Description' },
-]
-
 export default function ImageShowcase() {
-    if (IMAGES.length === 0) {
-        return null // Don't render anything until images are added
+    const [imageUrl, setImageUrl] = useState('')
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        fetchShowcaseImage()
+    }, [])
+
+    async function fetchShowcaseImage() {
+        const { data, error } = await supabase
+            .from('showcase_images')
+            .select('image_url')
+            .eq('active', true)
+            .order('sort_order', { ascending: true })
+
+        if (error || !data || data.length === 0) {
+            setLoading(false)
+            return
+        }
+
+        // Calculate which image to show based on date
+        // Changes every 3 days, cycles through all images
+        const startDate = new Date('2026-01-01') // fixed reference date
+        const now = new Date()
+        const daysSinceStart = Math.floor((now - startDate) / (1000 * 60 * 60 * 24))
+        const imageIndex = Math.floor(daysSinceStart / 3) % data.length
+
+        setImageUrl(data[imageIndex].image_url)
+        setLoading(false)
     }
+
+    if (loading) return null
+    if (!imageUrl) return null
 
     return (
         <section className="showcase-section">
-            <div className="showcase-inner">
-                <div className={`showcase-grid count-${Math.min(IMAGES.length, 6)}`}>
-                    {IMAGES.map((img, i) => (
-                        <Reveal key={i}>
-                            <div className={`showcase-item${i === 0 && IMAGES.length > 2 ? ' showcase-item-large' : ''}`}>
-                                <img src={img.src} alt={img.alt || 'Rossi Mission SF'} loading="lazy" />
-                            </div>
-                        </Reveal>
-                    ))}
+            <div className="showcase-container">
+                <div className="showcase-image-wrap">
+                    <img
+                        src={imageUrl}
+                        alt="Rossi Mission SF"
+                        className="showcase-image"
+                    />
                 </div>
             </div>
         </section>

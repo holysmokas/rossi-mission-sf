@@ -101,3 +101,33 @@
         aspect-ratio: 16 / 9;
     }
 }
+
+/* ===== SHOWCASE SECTION ===== */
+.showcase-section {
+    padding: 0 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.showcase-container {
+    width: 100%;
+    max-width: 720px;
+}
+
+.showcase-image-wrap {
+    width: 100%;
+    overflow: hidden;
+}
+
+.showcase-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+    .showcase-section {
+        padding: 0 16px;
+    }
+}
