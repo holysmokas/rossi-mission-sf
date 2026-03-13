@@ -34,32 +34,33 @@ function GalleryCard({ img, index, total, onMove, onToggle, onDelete, onUpdate, 
     }
 
     return (
-        <div className={`gal-card${!img.active ? ' gal-inactive' : ''}`}>
-            <div className="gal-card-img" onClick={() => onPreview(img)}>
+        <div className={`showcase-card${!img.active ? ' inactive' : ''}`}>
+            <div className="showcase-card-img" onClick={() => onPreview(img)} style={{ cursor: 'pointer' }}>
                 <img src={img.image_url} alt={img.title || img.file_name || 'Gallery'} />
-                <div className="gal-card-badge">#{index + 1}</div>
-                <div className="gal-card-zoom">Click to preview</div>
+                <div className="showcase-card-order">#{index + 1}</div>
             </div>
 
             {editing ? (
-                <div className="gal-card-edit">
-                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" className="gal-edit-input" autoFocus />
-                    <input type="text" value={artist} onChange={(e) => setArtist(e.target.value)} placeholder="Artist" className="gal-edit-input" />
-                    <div className="gal-edit-btns">
+                <div style={{ padding: '6px 8px', borderTop: '1px solid #eee', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" style={{ padding: '3px 5px', border: '1px solid #d0d0d0', fontFamily: "'Space Mono', monospace", fontSize: '0.55rem', outline: 'none', background: '#fafafa' }} autoFocus />
+                    <input type="text" value={artist} onChange={(e) => setArtist(e.target.value)} placeholder="Artist" style={{ padding: '3px 5px', border: '1px solid #d0d0d0', fontFamily: "'Space Mono', monospace", fontSize: '0.55rem', outline: 'none', background: '#fafafa' }} />
+                    <div style={{ display: 'flex', gap: 3 }}>
                         <button className="admin-btn small primary" onClick={saveDetails}>Save</button>
                         <button className="admin-btn small" onClick={() => setEditing(false)}>Cancel</button>
                     </div>
                 </div>
             ) : (
-                <div className="gal-card-meta" onClick={() => setEditing(true)} title="Click to edit title/artist">
-                    <span className="gal-card-title">{img.title || 'Untitled'}</span>
-                    {img.artist && <span className="gal-card-artist">by {img.artist}</span>}
+                <div onClick={() => setEditing(true)} title="Click to edit title/artist" style={{ padding: '4px 8px', cursor: 'pointer', borderTop: '1px solid #eee', minHeight: 20 }}>
+                    <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '0.5rem', fontWeight: 700, color: '#1a1a1a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{img.title || 'Untitled'}</div>
+                    {img.artist && <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '0.45rem', color: '#888', fontStyle: 'italic' }}>by {img.artist}</div>}
                 </div>
             )}
 
-            <div className="gal-card-actions">
-                <button className="admin-btn small" onClick={() => onMove(index, -1)} disabled={index === 0}>↑</button>
-                <button className="admin-btn small" onClick={() => onMove(index, 1)} disabled={index === total - 1}>↓</button>
+            <div className="showcase-card-actions">
+                <div className="showcase-card-arrows">
+                    <button className="admin-btn small" onClick={() => onMove(index, -1)} disabled={index === 0}>↑</button>
+                    <button className="admin-btn small" onClick={() => onMove(index, 1)} disabled={index === total - 1}>↓</button>
+                </div>
                 <button className={`toggle-btn ${img.active ? 'on' : 'off'}`} onClick={() => onToggle(img)}>
                     {img.active ? 'Active' : 'Hidden'}
                 </button>
@@ -181,7 +182,7 @@ export default function AdminGallery() {
                     <button className="admin-btn primary" onClick={() => fileRef.current?.click()} style={{ marginTop: 16 }}>Upload Art</button>
                 </div>
             ) : (
-                <div className="gal-grid">
+                <div className="showcase-grid">
                     {images.map((img, index) => (
                         <div
                             key={img.id}
