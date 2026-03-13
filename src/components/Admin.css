@@ -32,8 +32,8 @@
 }
 
 .admin-login-header h1 {
-  font-family: 'Dela Gothic One', cursive;
-  font-size: 2rem;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2.4rem;
   letter-spacing: 4px;
   background: linear-gradient(180deg, #1a1a1a, #999);
   -webkit-background-clip: text;
@@ -111,9 +111,9 @@
 }
 
 .admin-title {
-  font-family: 'Dela Gothic One', cursive;
-  font-size: 1.2rem;
-  letter-spacing: 3px;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.6rem;
+  letter-spacing: 4px;
 }
 
 .admin-view-site {
@@ -126,6 +126,16 @@
 
 .admin-view-site:hover {
   color: #1a1a1a;
+}
+
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-header-actions a {
+  text-decoration: none;
 }
 
 /* ===== STATS ===== */
@@ -145,12 +155,34 @@
   background: #fff;
 }
 
+.stat-card.clickable {
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.stat-card.clickable:hover {
+  border-color: #888;
+}
+
 .stat-val {
-  font-family: 'Dela Gothic One', cursive;
-  font-size: 1.8rem;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2.2rem;
+  letter-spacing: 1px;
   background: linear-gradient(180deg, #1a1a1a, #999);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.stat-warn {
+  background: linear-gradient(180deg, #c48200, #daa520) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.stat-danger {
+  background: linear-gradient(180deg, #cc4444, #e06666) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
 }
 
 .stat-lbl {
@@ -158,6 +190,37 @@
   letter-spacing: 3px;
   text-transform: uppercase;
   color: #888;
+}
+
+/* ===== TABS ===== */
+.admin-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.admin-tab {
+  padding: 12px 28px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.1rem;
+  letter-spacing: 3px;
+  color: #aaa;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.admin-tab:hover {
+  color: #1a1a1a;
+}
+
+.admin-tab.active {
+  color: #1a1a1a;
+  border-bottom-color: #1a1a1a;
 }
 
 /* ===== TOOLBAR ===== */
@@ -264,27 +327,29 @@
   width: 100%;
   border-collapse: collapse;
   background: #fff;
+  border: 1px solid #e0e0e0;
 }
 
 .admin-table th {
   text-align: left;
-  padding: 12px 16px;
+  padding: 14px 16px;
   font-size: 0.55rem;
   letter-spacing: 3px;
   text-transform: uppercase;
   color: #888;
-  border-bottom: 1px solid #d0d0d0;
+  border-bottom: 2px solid #e0e0e0;
+  background: #fafafa;
 }
 
 .admin-table td {
   padding: 12px 16px;
   font-size: 0.75rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid #f0f0f0;
   vertical-align: middle;
 }
 
 .admin-table tr:hover {
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(0, 0, 0, 0.015);
 }
 
 .inactive-row {
@@ -325,7 +390,7 @@
   font-size: 0.55rem;
   letter-spacing: 2px;
   text-transform: uppercase;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border: 1px solid #d0d0d0;
   color: #888;
 }
@@ -334,19 +399,24 @@
   font-size: 0.55rem;
   letter-spacing: 1px;
   text-transform: capitalize;
-  padding: 3px 8px;
+  padding: 4px 10px;
+  border: 1px solid;
+  white-space: nowrap;
 }
 
 .stock-badge.in_stock {
   color: #2d8a4e;
+  border-color: #2d8a4e;
 }
 
 .stock-badge.low_stock {
   color: #c48200;
+  border-color: #c48200;
 }
 
 .stock-badge.sold_out {
   color: #cc4444;
+  border-color: #cc4444;
 }
 
 .toggle-btn {
@@ -378,6 +448,128 @@
   text-align: center;
   color: #888;
   padding: 40px !important;
+}
+
+/* ===== INLINE QTY EDITOR ===== */
+.qty-click {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.3s;
+}
+
+.qty-click:hover {
+  opacity: 0.7;
+}
+
+.inline-qty-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inline-qty-input {
+  width: 60px;
+  padding: 5px 8px;
+  border: 1px solid #888;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  text-align: center;
+  outline: none;
+  background: #fff;
+}
+
+.inline-qty-input:focus {
+  border-color: #1a1a1a;
+}
+
+/* ===== QTY STATUS IN FORM ===== */
+.qty-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.qty-input-wrap input {
+  flex: 1;
+}
+
+.qty-status-badge {
+  font-size: 0.5rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  white-space: nowrap;
+  border: 1px solid;
+}
+
+.qty-status-badge.in_stock {
+  color: #2d8a4e;
+  border-color: #2d8a4e;
+}
+
+.qty-status-badge.low_stock {
+  color: #c48200;
+  border-color: #c48200;
+}
+
+.qty-status-badge.sold_out {
+  color: #cc4444;
+  border-color: #cc4444;
+}
+
+/* ===== INVENTORY LOG ===== */
+.inventory-log-hint {
+  font-size: 0.7rem;
+  color: #888;
+  letter-spacing: 1px;
+}
+
+.log-type-badge {
+  display: inline-block;
+  font-size: 0.5rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border: 1px solid;
+}
+
+.log-type-badge.sale {
+  color: #cc4444;
+  border-color: #cc4444;
+}
+
+.log-type-badge.restock {
+  color: #2d8a4e;
+  border-color: #2d8a4e;
+}
+
+.log-type-badge.adjustment {
+  color: #c48200;
+  border-color: #c48200;
+}
+
+.log-type-badge.initial {
+  color: #888;
+  border-color: #d0d0d0;
+}
+
+.log-change-pos {
+  color: #2d8a4e;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.log-change-neg {
+  color: #cc4444;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.log-note {
+  font-size: 0.65rem;
+  color: #888;
 }
 
 /* ===== FORM FIELDS ===== */
@@ -726,223 +918,6 @@
   padding: 20px;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  .admin-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-/* ======================================================
-   APPEND EVERYTHING BELOW TO THE END OF Admin.css
-   (Replace the previous "admin-css-additions" block)
-   ====================================================== */
-
-/* ===== HEADER ACTIONS ===== */
-.admin-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.admin-header-actions a {
-  text-decoration: none;
-}
-
-/* ===== TABS ===== */
-.admin-tabs {
-  display: flex;
-  gap: 0;
-  margin-bottom: 24px;
-  border-bottom: 1px solid #d0d0d0;
-}
-
-.admin-tab {
-  padding: 12px 24px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  font-family: 'Space Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #888;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.admin-tab:hover {
-  color: #1a1a1a;
-}
-
-.admin-tab.active {
-  color: #1a1a1a;
-  border-bottom-color: #1a1a1a;
-}
-
-/* ===== CLICKABLE STAT CARDS ===== */
-.stat-card.clickable {
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.stat-card.clickable:hover {
-  border-color: #888;
-}
-
-.stat-warn {
-  -webkit-text-fill-color: #c48200 !important;
-}
-
-.stat-danger {
-  -webkit-text-fill-color: #cc4444 !important;
-}
-
-/* ===== INLINE QTY EDITOR ===== */
-.qty-click {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: opacity 0.3s;
-}
-
-.qty-click:hover {
-  opacity: 0.7;
-}
-
-.inline-qty-edit {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.inline-qty-input {
-  width: 60px;
-  padding: 4px 8px;
-  border: 1px solid #888;
-  font-family: 'Space Mono', monospace;
-  font-size: 0.75rem;
-  text-align: center;
-  outline: none;
-}
-
-.inline-qty-input:focus {
-  border-color: #1a1a1a;
-}
-
-/* ===== QTY STATUS IN FORM ===== */
-.qty-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.qty-input-wrap input {
-  flex: 1;
-  padding: 10px 14px;
-  background: #fafafa;
-  border: 1px solid #d0d0d0;
-  color: #1a1a1a;
-  font-family: 'Space Mono', monospace;
-  font-size: 0.8rem;
-  outline: none;
-  transition: border-color 0.3s;
-}
-
-.qty-input-wrap input:focus {
-  border-color: #888;
-}
-
-.qty-status-badge {
-  font-size: 0.5rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  white-space: nowrap;
-  border: 1px solid;
-}
-
-.qty-status-badge.in_stock {
-  color: #2d8a4e;
-  border-color: #2d8a4e;
-}
-
-.qty-status-badge.low_stock {
-  color: #c48200;
-  border-color: #c48200;
-}
-
-.qty-status-badge.sold_out {
-  color: #cc4444;
-  border-color: #cc4444;
-}
-
-/* ===== INVENTORY LOG ===== */
-.inventory-log-hint {
-  font-size: 0.7rem;
-  color: #888;
-  letter-spacing: 1px;
-}
-
-.log-type-badge {
-  font-size: 0.55rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border: 1px solid;
-}
-
-.log-type-badge.sale {
-  color: #cc4444;
-  border-color: #cc4444;
-}
-
-.log-type-badge.restock {
-  color: #2d8a4e;
-  border-color: #2d8a4e;
-}
-
-.log-type-badge.adjustment {
-  color: #c48200;
-  border-color: #c48200;
-}
-
-.log-type-badge.initial {
-  color: #888;
-  border-color: #d0d0d0;
-}
-
-.log-change-pos {
-  color: #2d8a4e;
-  font-weight: 700;
-  font-size: 0.8rem;
-}
-
-.log-change-neg {
-  color: #cc4444;
-  font-weight: 700;
-  font-size: 0.8rem;
-}
-
-.log-note {
-  font-size: 0.65rem;
-  color: #888;
-}
-
 /* ===== ACCOUNT PAGE ===== */
 .account-page-grid {
   display: grid;
@@ -981,7 +956,219 @@
   gap: 16px;
 }
 
+/* ===== ADMIN SHOWCASE ===== */
+.showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.showcase-card {
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  transition: all 0.3s;
+  cursor: grab;
+}
+
+.showcase-card:active {
+  cursor: grabbing;
+}
+
+.showcase-card.inactive {
+  opacity: 0.35;
+}
+
+.showcase-card-img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.showcase-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.showcase-card-order {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #1a1a1a;
+  color: #fafafa;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+}
+
+.showcase-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  gap: 6px;
+}
+
+.showcase-card-arrows {
+  display: flex;
+  gap: 4px;
+}
+
+.showcase-empty {
+  text-align: center;
+  padding: 60px 20px;
+  background: #fff;
+  border: 1px dashed #d0d0d0;
+}
+
+.showcase-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.3;
+}
+
+.showcase-empty p {
+  font-size: 0.75rem;
+  color: #888;
+  letter-spacing: 1px;
+}
+
+.showcase-empty-hint {
+  font-size: 0.65rem !important;
+  color: #aaa !important;
+  margin-top: 6px;
+}
+
+/* ===== ADMIN GALLERY ===== */
+.gallery-admin-card {
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  transition: all 0.3s;
+  cursor: grab;
+}
+
+.gallery-admin-card:active {
+  cursor: grabbing;
+}
+
+.gallery-admin-card.inactive {
+  opacity: 0.35;
+}
+
+.gallery-admin-img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.gallery-admin-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-admin-featured {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #c48200;
+  color: #fff;
+  font-size: 0.6rem;
+  padding: 2px 6px;
+}
+
+.gallery-admin-meta {
+  padding: 8px 10px;
+  cursor: pointer;
+  min-height: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background 0.2s;
+}
+
+.gallery-admin-meta:hover {
+  background: #f5f5f5;
+}
+
+.gallery-admin-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gallery-admin-artist {
+  font-size: 0.55rem;
+  color: #888;
+  font-style: italic;
+}
+
+.gallery-admin-edit {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gallery-admin-input {
+  padding: 5px 8px;
+  border: 1px solid #d0d0d0;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  outline: none;
+  background: #fafafa;
+}
+
+.gallery-admin-input:focus {
+  border-color: #888;
+}
+
+.gallery-admin-edit-btns {
+  display: flex;
+  gap: 4px;
+}
+
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
+  .admin-page {
+    padding: 0 12px 40px;
+  }
+
+  .admin-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-tabs {
+    overflow-x: auto;
+  }
+
+  .admin-tab {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+  }
+
   .account-page-grid {
     grid-template-columns: 1fr;
   }
@@ -990,7 +1177,13 @@
     grid-row: auto;
   }
 
-  .admin-tabs {
-    overflow-x: auto;
+  .admin-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .showcase-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
   }
 }

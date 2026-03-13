@@ -11,9 +11,10 @@
   padding: 140px 40px 80px;
 }
 
+/* ── Grid ── */
 .gallery-grid-page {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   margin-top: 20px;
 }
@@ -22,9 +23,6 @@
   aspect-ratio: 1;
   background: var(--gray-dark);
   border: 1px solid var(--gray-mid);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   position: relative;
   overflow: hidden;
   cursor: pointer;
@@ -35,23 +33,190 @@
   border-color: var(--gray-light);
 }
 
+.gallery-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s;
+  filter: grayscale(0.1);
+}
+
+.gallery-cell:hover img {
+  transform: scale(1.05);
+  filter: grayscale(0);
+}
+
 .gallery-cell-large {
   grid-column: span 2;
   grid-row: span 2;
+  aspect-ratio: auto;
 }
 
-.gallery-cell-icon {
-  font-size: 2rem;
-  opacity: 0.1;
-  transition: all 0.5s;
+/* ── Info overlay ── */
+.gallery-cell-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s;
 }
 
-.gallery-cell:hover .gallery-cell-icon {
-  opacity: 0.3;
-  transform: scale(1.1) rotate(5deg);
+.gallery-cell:hover .gallery-cell-info {
+  opacity: 1;
+  transform: translateY(0);
 }
 
+.gallery-cell-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+.gallery-cell-artist {
+  font-size: 0.6rem;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
+/* ── Lightbox ── */
+.gallery-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+
+.lightbox-close:hover {
+  opacity: 1;
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 3rem;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+  padding: 20px;
+}
+
+.lightbox-nav:hover {
+  opacity: 1;
+}
+
+.lightbox-prev {
+  left: 16px;
+}
+
+.lightbox-next {
+  right: 16px;
+}
+
+.lightbox-content {
+  max-width: 85vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lightbox-content img {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.lightbox-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 16px;
+}
+
+.lightbox-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.4rem;
+  letter-spacing: 3px;
+  color: #fff;
+}
+
+.lightbox-artist {
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+.lightbox-counter {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Responsive ── */
 @media (max-width: 768px) {
-  .gallery-page-content { padding: 100px 20px 60px; }
-  .gallery-grid-page { grid-template-columns: repeat(2, 1fr); }
+  .gallery-page-content {
+    padding: 100px 20px 60px;
+  }
+
+  .gallery-grid-page {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gallery-cell-large {
+    grid-column: span 2;
+    grid-row: span 1;
+    aspect-ratio: 16 / 9;
+  }
+
+  .lightbox-nav {
+    font-size: 2rem;
+    padding: 12px;
+  }
+
+  .lightbox-prev {
+    left: 4px;
+  }
+
+  .lightbox-next {
+    right: 4px;
+  }
 }

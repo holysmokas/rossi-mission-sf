@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import ProductForm from './ProductForm'
 import BulkUpload from './BulkUpload'
 import AdminShowcase from './AdminShowcase'
+import AdminGallery from './AdminGallery'
 import './Admin.css'
 
 const CATEGORIES = {
@@ -90,7 +91,7 @@ export default function AdminDashboard() {
   const [showForm, setShowForm] = useState(false)
   const [showBulk, setShowBulk] = useState(false)
   const [editProduct, setEditProduct] = useState(null)
-  const [activeTab, setActiveTab] = useState('products') // 'products' | 'inventory' | 'showcase'
+  const [activeTab, setActiveTab] = useState('products') // 'products' | 'inventory' | 'showcase' | 'gallery'
   const [inventoryLog, setInventoryLog] = useState([])
   const [logLoading, setLogLoading] = useState(false)
   const [stats, setStats] = useState({ total: 0, active: 0, lowStock: 0, soldOut: 0, totalUnits: 0 })
@@ -258,6 +259,12 @@ export default function AdminDashboard() {
         >
           Showcase
         </button>
+        <button
+          className={`admin-tab${activeTab === 'gallery' ? ' active' : ''}`}
+          onClick={() => setActiveTab('gallery')}
+        >
+          Gallery
+        </button>
       </div>
 
       {/* ══════════ PRODUCTS TAB ══════════ */}
@@ -402,6 +409,11 @@ export default function AdminDashboard() {
       {/* ══════════ SHOWCASE TAB ══════════ */}
       {activeTab === 'showcase' && (
         <AdminShowcase />
+      )}
+
+      {/* ══════════ GALLERY TAB ══════════ */}
+      {activeTab === 'gallery' && (
+        <AdminGallery />
       )}
     </div>
   )
