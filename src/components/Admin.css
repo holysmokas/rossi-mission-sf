@@ -952,8 +952,8 @@
 /* ===== ADMIN SHOWCASE ===== */
 .showcase-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 200px));
+  gap: 12px;
 }
 
 .showcase-card {
@@ -1302,8 +1302,8 @@
   }
 
   .showcase-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 160px));
+    gap: 8px;
   }
 
   .gal-grid {
