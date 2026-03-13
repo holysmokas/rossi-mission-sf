@@ -1001,13 +1001,25 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px;
-  gap: 6px;
+  padding: 6px;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.showcase-card-actions .admin-btn.small {
+  padding: 3px 6px;
+  font-size: 0.45rem;
+  letter-spacing: 1px;
+}
+
+.showcase-card-actions .toggle-btn {
+  padding: 3px 6px;
+  font-size: 0.45rem;
 }
 
 .showcase-card-arrows {
   display: flex;
-  gap: 4px;
+  gap: 2px;
 }
 
 .showcase-empty {
