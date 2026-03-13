@@ -56,15 +56,13 @@ function GalleryCard({ img, index, total, onMove, onToggle, onDelete, onUpdate, 
                 </div>
             )}
 
-            <div className="showcase-card-actions">
-                <div className="showcase-card-arrows">
-                    <button className="admin-btn small" onClick={() => onMove(index, -1)} disabled={index === 0}>↑</button>
-                    <button className="admin-btn small" onClick={() => onMove(index, 1)} disabled={index === total - 1}>↓</button>
-                </div>
-                <button className={`toggle-btn ${img.active ? 'on' : 'off'}`} onClick={() => onToggle(img)}>
-                    {img.active ? 'Active' : 'Hidden'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: 4, borderTop: '1px solid #eee', flexWrap: 'wrap' }}>
+                <button style={{ padding: '2px 6px', border: '1px solid #d0d0d0', background: 'none', fontFamily: "'Space Mono', monospace", fontSize: '0.5rem', cursor: 'pointer' }} onClick={() => onMove(index, -1)} disabled={index === 0}>↑</button>
+                <button style={{ padding: '2px 6px', border: '1px solid #d0d0d0', background: 'none', fontFamily: "'Space Mono', monospace", fontSize: '0.5rem', cursor: 'pointer' }} onClick={() => onMove(index, 1)} disabled={index === total - 1}>↓</button>
+                <button style={{ padding: '2px 6px', border: `1px solid ${img.active ? '#2d8a4e' : '#d0d0d0'}`, background: 'none', fontFamily: "'Space Mono', monospace", fontSize: '0.4rem', color: img.active ? '#2d8a4e' : '#aaa', cursor: 'pointer', letterSpacing: 1 }} onClick={() => onToggle(img)}>
+                    {img.active ? '●' : '○'}
                 </button>
-                <button className="admin-btn small danger" onClick={() => onDelete(img)}>Delete</button>
+                <button style={{ padding: '2px 6px', border: '1px solid #cc4444', background: 'none', fontFamily: "'Space Mono', monospace", fontSize: '0.4rem', color: '#cc4444', cursor: 'pointer', marginLeft: 'auto', letterSpacing: 1 }} onClick={() => onDelete(img)}>✕</button>
             </div>
         </div>
     )
