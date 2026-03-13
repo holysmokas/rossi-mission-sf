@@ -1045,8 +1045,8 @@
 /* ===== ADMIN GALLERY ===== */
 .gal-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
 }
 
 .gal-card {
@@ -1067,38 +1067,37 @@
 .gal-card-img {
   position: relative;
   width: 100%;
+  height: 140px;
   overflow: hidden;
   background: #f5f5f5;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  min-height: 100px;
-  max-height: 280px;
 }
 
 .gal-card-img img {
-  width: 100%;
-  height: auto;
-  display: block;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
+  display: block;
   transition: transform 0.3s;
 }
 
 .gal-card-img:hover img {
-  transform: scale(1.03);
+  transform: scale(1.05);
 }
 
 .gal-card-badge {
   position: absolute;
-  top: 6px;
-  left: 6px;
+  top: 4px;
+  left: 4px;
   background: #1a1a1a;
   color: #fafafa;
   font-family: 'Space Mono', monospace;
-  font-size: 0.5rem;
+  font-size: 0.45rem;
   letter-spacing: 1px;
-  padding: 2px 7px;
+  padding: 2px 6px;
 }
 
 .gal-card-zoom {
@@ -1106,11 +1105,11 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 6px;
+  padding: 4px;
   text-align: center;
   background: rgba(0, 0, 0, 0.6);
   color: #fff;
-  font-size: 0.5rem;
+  font-size: 0.45rem;
   letter-spacing: 2px;
   text-transform: uppercase;
   opacity: 0;
@@ -1122,11 +1121,11 @@
 }
 
 .gal-card-meta {
-  padding: 8px 10px;
+  padding: 6px 8px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   border-top: 1px solid #e8e8e8;
   transition: background 0.2s;
 }
@@ -1136,7 +1135,7 @@
 }
 
 .gal-card-title {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 1px;
   color: #1a1a1a;
@@ -1146,24 +1145,24 @@
 }
 
 .gal-card-artist {
-  font-size: 0.55rem;
+  font-size: 0.5rem;
   color: #888;
   font-style: italic;
 }
 
 .gal-card-edit {
-  padding: 8px 10px;
+  padding: 6px 8px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   border-top: 1px solid #e8e8e8;
 }
 
 .gal-edit-input {
-  padding: 5px 8px;
+  padding: 4px 6px;
   border: 1px solid #d0d0d0;
   font-family: 'Space Mono', monospace;
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   outline: none;
   background: #fafafa;
 }
@@ -1180,10 +1179,9 @@
 .gal-card-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px;
+  gap: 3px;
+  padding: 6px 8px;
   border-top: 1px solid #e8e8e8;
-  flex-wrap: wrap;
 }
 
 /* ── Preview Lightbox ── */
@@ -1200,8 +1198,8 @@
 
 .gal-preview-box {
   position: relative;
-  max-width: 90vw;
-  max-height: 90vh;
+  max-width: 600px;
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1211,14 +1209,14 @@
 
 .gal-preview-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 8px;
+  right: 8px;
   background: #1a1a1a;
   color: #fff;
   border: none;
-  width: 32px;
-  height: 32px;
-  font-size: 1rem;
+  width: 28px;
+  height: 28px;
+  font-size: 0.9rem;
   cursor: pointer;
   z-index: 10;
   display: flex;
@@ -1232,8 +1230,8 @@
 }
 
 .gal-preview-img {
-  max-width: 90vw;
-  max-height: 75vh;
+  max-width: 100%;
+  max-height: 60vh;
   object-fit: contain;
   display: block;
 }
@@ -1242,27 +1240,27 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 16px 24px;
+  gap: 3px;
+  padding: 12px 20px;
   width: 100%;
   border-top: 1px solid #e8e8e8;
 }
 
 .gal-preview-title {
   font-family: 'Bebas Neue', cursive;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   letter-spacing: 3px;
   color: #1a1a1a;
 }
 
 .gal-preview-artist {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: #888;
   font-style: italic;
 }
 
 .gal-preview-file {
-  font-size: 0.55rem;
+  font-size: 0.5rem;
   color: #aaa;
   letter-spacing: 1px;
 }
@@ -1318,16 +1316,23 @@
   }
 
   .gal-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+  }
+
+  .gal-card-img {
+    height: 110px;
   }
 
   .gal-card-actions {
     gap: 3px;
   }
 
-  .gal-preview-img {
+  .gal-preview-box {
     max-width: 95vw;
-    max-height: 70vh;
+  }
+
+  .gal-preview-img {
+    max-height: 55vh;
   }
 }
