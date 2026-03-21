@@ -1,5 +1,5 @@
 // supabase/functions/square-webhook/index.ts
-// Deploy with: supabase functions deploy square-webhook
+// Deploy with: supabase functions deploy square-webhook --no-verify-jwt
 //
 // Secrets needed:
 //   SQUARE_ACCESS_TOKEN
@@ -61,7 +61,6 @@ async function fetchSquareOrder(baseUrl, orderId, accessToken, attempt = 1) {
     return null
   }
 
-  // Log the FULL order structure for debugging
   console.log(`[Attempt ${attempt}] Order state: ${order.state}`)
   console.log(`[Attempt ${attempt}] Fulfillments count: ${order.fulfillments?.length || 0}`)
 
@@ -171,7 +170,6 @@ serve(async (req) => {
     console.log('Amount:', amountCents, currency)
     console.log('========================================')
 
-    // Log the full payment object to see what's available
     console.log('PAYMENT OBJECT KEYS:', Object.keys(payment))
     console.log('payment.shipping_address:', JSON.stringify(payment.shipping_address || 'NOT PRESENT'))
     console.log('payment.buyer_email_address:', payment.buyer_email_address || 'NOT PRESENT')
@@ -182,20 +180,73 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const sb = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null
 
-    // ── Check if already processed (prevent duplicates) ──
+    // ══════════════════════════════════════════════════════════
+    // ATOMIC CLAIM — Only ONE webhook instance can proceed.
+    // Sets notified=true IMMEDIATELY so parallel webhooks bail out.
+    // ══════════════════════════════════════════════════════════
     if (sb) {
-      const { data: existingOrder } = await sb
+      // Try to claim: UPDATE orders SET notified=true WHERE order_id=X AND notified=false
+      // Only returns rows if WE flipped the flag (atomic at the DB level)
+      const { data: claimed, error: claimErr } = await sb
         .from('orders')
-        .select('notified')
+        .update({ notified: true })
         .eq('square_order_id', squareOrderId)
-        .single()
+        .eq('notified', false)
+        .select('id')
 
-      if (existingOrder?.notified) {
-        console.log('Already notified, skipping')
-        return new Response(JSON.stringify({ received: true, skipped: 'already notified' }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        })
+      if (claimErr) {
+        console.error('Claim query error:', claimErr)
+      }
+
+      if (claimed && claimed.length > 0) {
+        // WE won the claim — proceed with processing
+        console.log('✅ CLAIMED order for processing:', squareOrderId)
+      } else {
+        // Either already claimed (notified=true) or order doesn't exist yet
+
+        // Check if another webhook already claimed it
+        const { data: existing } = await sb
+          .from('orders')
+          .select('notified')
+          .eq('square_order_id', squareOrderId)
+          .single()
+
+        if (existing) {
+          // Order exists and notified is already true — another webhook is handling it
+          console.log('⏭ Already claimed by another webhook instance, skipping:', squareOrderId)
+          return new Response(JSON.stringify({ received: true, skipped: 'already claimed' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        }
+
+        // Order doesn't exist yet (webhook arrived before create-checkout saved it)
+        // Insert it immediately with notified=true so we claim it
+        console.log('Order not in DB yet, inserting with claim:', squareOrderId)
+        const { error: insertErr } = await sb
+          .from('orders')
+          .insert({
+            square_order_id: squareOrderId,
+            status: 'processing',
+            notified: true,
+            items: [],
+            total_cents: amountCents,
+            currency: currency,
+          })
+
+        if (insertErr) {
+          // unique constraint violation = another webhook beat us to it
+          if (insertErr.code === '23505') {
+            console.log('⏭ Lost insert race to another webhook, skipping:', squareOrderId)
+            return new Response(JSON.stringify({ received: true, skipped: 'lost insert race' }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          }
+          console.error('Insert error:', insertErr)
+        } else {
+          console.log('✅ CLAIMED via insert:', squareOrderId)
+        }
       }
     }
 
@@ -223,7 +274,6 @@ serve(async (req) => {
 
     // ── SOURCE 2: Fetch Order (with 3s delay + retry for race condition) ──
     if (squareOrderId && SQUARE_ACCESS_TOKEN) {
-      // Wait 3 seconds before first fetch — gives Square time to populate fulfillment
       console.log('Waiting 3s before fetching order (race condition workaround)...')
       await sleep(3000)
 
@@ -344,8 +394,8 @@ serve(async (req) => {
         savedItems = existingOrder.items
       }
 
-      await sb.from('orders').upsert({
-        square_order_id: squareOrderId,
+      // Update order with full details (notified already set to true by the claim)
+      await sb.from('orders').update({
         square_payment_id: squarePaymentId,
         status: 'paid',
         items: savedItems.length > 0 ? savedItems : lineItems,
@@ -356,9 +406,8 @@ serve(async (req) => {
         customer_email: customerEmail || null,
         shipping_address: shippingAddress,
         square_receipt_url: receiptUrl || null,
-        notified: false,
         paid_at: new Date().toISOString(),
-      }, { onConflict: 'square_order_id' })
+      }).eq('square_order_id', squareOrderId)
 
       // ── DECREMENT INVENTORY ──
       const itemsToDecrement = lineItems.length > 0 ? lineItems : savedItems
@@ -454,11 +503,6 @@ View full details: https://squareup.com/dashboard/sales/transactions
         } catch (emailErr) {
           console.error(`Failed to send to ${toEmail}:`, emailErr)
         }
-      }
-
-      // Mark as notified
-      if (sb) {
-        await sb.from('orders').update({ notified: true }).eq('square_order_id', squareOrderId)
       }
     }
 
