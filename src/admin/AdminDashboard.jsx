@@ -5,6 +5,7 @@ import ProductForm from './ProductForm'
 import BulkUpload from './BulkUpload'
 import AdminShowcase from './AdminShowcase'
 import AdminGallery from './AdminGallery'
+import AdminOrders from './AdminOrders'
 import './Admin.css'
 
 const CATEGORIES = {
@@ -91,7 +92,7 @@ export default function AdminDashboard() {
   const [showForm, setShowForm] = useState(false)
   const [showBulk, setShowBulk] = useState(false)
   const [editProduct, setEditProduct] = useState(null)
-  const [activeTab, setActiveTab] = useState('products') // 'products' | 'inventory' | 'showcase' | 'gallery'
+  const [activeTab, setActiveTab] = useState('products') // 'products' | 'inventory' | 'showcase' | 'gallery' | 'orders'
   const [inventoryLog, setInventoryLog] = useState([])
   const [logLoading, setLogLoading] = useState(false)
   const [stats, setStats] = useState({ total: 0, active: 0, lowStock: 0, soldOut: 0, totalUnits: 0 })
@@ -265,6 +266,12 @@ export default function AdminDashboard() {
         >
           Gallery
         </button>
+        <button
+          className={`admin-tab${activeTab === 'orders' ? ' active' : ''}`}
+          onClick={() => setActiveTab('orders')}
+        >
+          Orders
+        </button>
       </div>
 
       {/* ══════════ PRODUCTS TAB ══════════ */}
@@ -414,6 +421,11 @@ export default function AdminDashboard() {
       {/* ══════════ GALLERY TAB ══════════ */}
       {activeTab === 'gallery' && (
         <AdminGallery />
+      )}
+
+      {/* ══════════ ORDERS TAB ══════════ */}
+      {activeTab === 'orders' && (
+        <AdminOrders />
       )}
     </div>
   )
