@@ -181,73 +181,31 @@ serve(async (req) => {
     const sb = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null
 
     // ══════════════════════════════════════════════════════════
-    // ATOMIC CLAIM — Only ONE webhook instance can proceed.
-    // Sets notified=true IMMEDIATELY so parallel webhooks bail out.
+    // ATOMIC CLAIM via Postgres function — guaranteed one winner.
+    // The DB function does UPDATE ... WHERE notified=false in a
+    // single transaction. Only one concurrent caller can succeed.
     // ══════════════════════════════════════════════════════════
     if (sb) {
-      // Try to claim: UPDATE orders SET notified=true WHERE order_id=X AND notified=false
-      // Only returns rows if WE flipped the flag (atomic at the DB level)
-      const { data: claimed, error: claimErr } = await sb
-        .from('orders')
-        .update({ notified: true })
-        .eq('square_order_id', squareOrderId)
-        .eq('notified', false)
-        .select('id')
+      const { data: claimed, error: claimErr } = await sb.rpc('claim_order_for_notification', {
+        p_order_id: squareOrderId,
+      })
+
+      console.log('Claim result:', claimed, 'Error:', claimErr)
 
       if (claimErr) {
-        console.error('Claim query error:', claimErr)
+        console.error('Claim RPC error:', claimErr)
+        // If the function doesn't exist yet, log it but don't crash
       }
 
-      if (claimed && claimed.length > 0) {
-        // WE won the claim — proceed with processing
-        console.log('✅ CLAIMED order for processing:', squareOrderId)
-      } else {
-        // Either already claimed (notified=true) or order doesn't exist yet
-
-        // Check if another webhook already claimed it
-        const { data: existing } = await sb
-          .from('orders')
-          .select('notified')
-          .eq('square_order_id', squareOrderId)
-          .single()
-
-        if (existing) {
-          // Order exists and notified is already true — another webhook is handling it
-          console.log('⏭ Already claimed by another webhook instance, skipping:', squareOrderId)
-          return new Response(JSON.stringify({ received: true, skipped: 'already claimed' }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          })
-        }
-
-        // Order doesn't exist yet (webhook arrived before create-checkout saved it)
-        // Insert it immediately with notified=true so we claim it
-        console.log('Order not in DB yet, inserting with claim:', squareOrderId)
-        const { error: insertErr } = await sb
-          .from('orders')
-          .insert({
-            square_order_id: squareOrderId,
-            status: 'processing',
-            notified: true,
-            items: [],
-            total_cents: amountCents,
-            currency: currency,
-          })
-
-        if (insertErr) {
-          // unique constraint violation = another webhook beat us to it
-          if (insertErr.code === '23505') {
-            console.log('⏭ Lost insert race to another webhook, skipping:', squareOrderId)
-            return new Response(JSON.stringify({ received: true, skipped: 'lost insert race' }), {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' },
-            })
-          }
-          console.error('Insert error:', insertErr)
-        } else {
-          console.log('✅ CLAIMED via insert:', squareOrderId)
-        }
+      if (claimed !== true) {
+        console.log('⏭ Another webhook already claimed this order, skipping:', squareOrderId)
+        return new Response(JSON.stringify({ received: true, skipped: 'already claimed' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
       }
+
+      console.log('✅ CLAIMED order for processing:', squareOrderId)
     }
 
     // ══════════════════════════════════════════
