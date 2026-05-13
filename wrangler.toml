@@ -1,0 +1,22 @@
+name = "rossi-mission-sf"
+compatibility_date = "2026-05-13"
+pages_build_output_dir = "dist"
+
+# ── D1 database (created via `wrangler d1 create rossi`) ──
+# Replace database_id with the UUID printed by that command.
+[[d1_databases]]
+binding = "DB"
+database_name = "rossi"
+database_id = "ee5bab58-2326-49e7-a5b6-4ff34884fb86"
+
+# ── R2 bucket for product/gallery/showcase images ──
+# Already exists: rossi-media (Western North America)
+# Wix DNS makes a custom R2 domain impractical, so we proxy through
+# the Pages app at /media/<key> via functions/media/[[path]].js.
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "rossi-media"
+
+# ── Vars (non-secret). Secrets via `wrangler pages secret put ...` ──
+[vars]
+PUBLIC_MEDIA_BASE = "/media"

@@ -1,131 +1,43 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { Link } from 'react-router-dom'
 import './Admin.css'
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [isSignUp, setIsSignUp] = useState(false)
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    // Check if already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate('/admin/dashboard')
-    })
-
-    // Listen for auth changes (handles email confirmation redirect)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        navigate('/admin/dashboard')
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [navigate])
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setMessage('')
-    setLoading(true)
-
-    if (isSignUp) {
-      // Get the site origin for redirect
-      const redirectUrl = `${window.location.origin}/admin`
-
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-        },
-      })
-
-      if (signUpError) {
-        setError(signUpError.message)
-      } else if (data?.user?.identities?.length === 0) {
-        // User already exists but hasn't confirmed
-        setError('An account with this email already exists. Check your inbox for a confirmation link.')
-      } else if (data?.user && !data?.session) {
-        // Signup successful, email confirmation required
-        setMessage('Account created! Check your email and click the confirmation link to activate your account. Then come back here to sign in.')
-        setEmail('')
-        setPassword('')
-        setIsSignUp(false) // Switch to sign-in view so they can log in after confirming
-      } else if (data?.session) {
-        // No email confirmation required — auto signed in
-        navigate('/admin/dashboard')
-      }
-    } else {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (authError) {
-        if (authError.message.includes('Email not confirmed')) {
-          setError('Your email is not confirmed yet. Check your inbox for a confirmation link.')
-        } else {
-          setError(authError.message)
-        }
-      } else {
-        navigate('/admin/dashboard')
-      }
-    }
-
-    setLoading(false)
-  }
-
   return (
     <div className="admin-login-page">
       <div className="admin-login-box">
         <div className="admin-login-header">
           <h1>ROSSI</h1>
-          <p>{isSignUp ? 'Create Admin Account' : 'Admin Panel'}</p>
+          <p>Admin Panel</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="admin-login-form">
-          <div className="admin-field">
-            <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@rossimissionsf.com"
-              required
-            />
-          </div>
-          <div className="admin-field">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              minLength={6}
-            />
-          </div>
-          {error && <p className="admin-error">{error}</p>}
-          {message && <p className="admin-success">{message}</p>}
-          <button type="submit" className="admin-btn primary" disabled={loading}>
-            {loading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
-          </button>
-        </form>
+        <div style={{
+          padding: '20px',
+          border: '1px solid #d0d0d0',
+          background: '#fafafa',
+          marginBottom: 20,
+        }}>
+          <p style={{
+            fontFamily: "'Space Mono', monospace",
+            fontSize: '0.7rem',
+            lineHeight: 1.7,
+            color: '#1a1a1a',
+            letterSpacing: '1px',
+          }}>
+            Admin temporarily offline while we migrate to a new backend. The storefront is live and accepting order requests.
+          </p>
+          <p style={{
+            fontFamily: "'Space Mono', monospace",
+            fontSize: '0.6rem',
+            lineHeight: 1.7,
+            color: '#888',
+            letterSpacing: '1px',
+            marginTop: 12,
+          }}>
+            Estimated back online: within a few days.
+          </p>
+        </div>
 
-        <button
-          className="admin-toggle-auth"
-          onClick={() => { setIsSignUp(!isSignUp); setError(''); setMessage('') }}
-        >
-          {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
-        </button>
-
-        <a href="/" className="admin-back-link">← Back to site</a>
+        <Link to="/" className="admin-back-link">← Back to site</Link>
       </div>
     </div>
   )
