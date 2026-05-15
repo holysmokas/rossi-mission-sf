@@ -24,6 +24,7 @@ function nowSecs() {
 }
 
 export async function onRequestPost({ request, env }) {
+  console.log("CHECKOUT_V3_MARKER", new Date().toISOString());
     let body;
     try {
         body = await request.json();
@@ -128,7 +129,8 @@ export async function onRequestPost({ request, env }) {
         return Response.json({ error: 'unexpected square response', data }, { status: 502 });
     }
 
-    // Persist pending order; webhook will UPDATE this row when payment completes
+    console.log("CHECKOUT_V3_CART", JSON.stringify(cartItems));
+  // Persist pending order; webhook will UPDATE this row when payment completes
     await env.DB.prepare(
         `INSERT INTO orders
        (id, square_order_id, status, items, item_count, total_cents, currency, notified, created_at)
