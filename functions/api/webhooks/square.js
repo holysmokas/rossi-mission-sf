@@ -1,18 +1,3 @@
-// functions/api/webhooks/square.js
-//
-// POST /api/webhooks/square
-//
-// Square posts payment.created and payment.updated events. We process
-// payment.updated with status=COMPLETED:
-//   - Verify HMAC-SHA256 signature
-//   - Atomically claim the order (notified flag) to dedupe
-//   - Decrement inventory atomically
-//   - Email customer + admin via Resend
-//
-// Race condition: webhook can arrive before /api/checkout has finished
-// saving the orders row. We retry the claim up to 3 times with 3s sleeps,
-// matching the original Supabase Edge Function behavior.
-
 const SQUARE_API_VERSION = '2025-06-18';
 const MAX_CLAIM_ATTEMPTS = 4;
 const CLAIM_RETRY_DELAY_MS = 3000;
@@ -31,14 +16,11 @@ function sleep(ms) {
     return new Promise(r => setTimeout(r, ms));
 }
 
-// ─── Signature verification (HMAC-SHA256 of notification_url + body) ────────
 async function verifySignature(request, rawBody, signatureKey) {
     const sig = request.headers.get('x-square-hmacsha256-signature');
     if (!sig) return false;
-
-    const url = request.url; // full URL Square POSTed to
+    const url = request.url;
     const message = url + rawBody;
-
     const key = await crypto.subtle.importKey(
         'raw',
         new TextEncoder().encode(signatureKey),
@@ -46,21 +28,14 @@ async function verifySignature(request, rawBody, signatureKey) {
         false,
         ['sign']
     );
-    const macBuf = await crypto.subtle.sign(
-        'HMAC',
-        key,
-        new TextEncoder().encode(message)
-    );
+    const macBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
     const macB64 = btoa(String.fromCharCode(...new Uint8Array(macBuf)));
-
-    // Constant-time compare
     if (macB64.length !== sig.length) return false;
     let diff = 0;
     for (let i = 0; i < macB64.length; i++) diff |= macB64.charCodeAt(i) ^ sig.charCodeAt(i);
     return diff === 0;
 }
 
-// ─── Resend email ───────────────────────────────────────────────────────────
 async function sendEmail(env, { to, subject, html }) {
     if (!env.RESEND_API_KEY) {
         console.warn('RESEND_API_KEY missing, skipping email to', to);
@@ -98,9 +73,9 @@ function escapeHtml(s) {
 function buildItemsHtml(items) {
     return items.map(i =>
         `<tr>
-       <td style="padding:8px 12px;border-bottom:1px solid #eee;">${escapeHtml(i.name)}</td>
+       <td style="padding:8px 12px;border-bottom:1px solid #eee;">${escapeHtml(i.name || 'Item')}</td>
        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">${i.quantity}</td>
-       <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">$${(i.price * i.quantity).toFixed(2)}</td>
+       <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">$${((i.price || 0) * i.quantity).toFixed(2)}</td>
      </tr>`
     ).join('');
 }
@@ -137,7 +112,6 @@ function adminEmailHtml({ order, items, totalCents, customerName, customerEmail,
        ${escapeHtml(shipping.city || '')}, ${escapeHtml(shipping.state || '')} ${escapeHtml(shipping.zip || '')}<br>
        ${escapeHtml(shipping.country || '')}</p>`
         : '<p><em>No shipping address captured</em></p>';
-
     return `<!doctype html>
 <html><body style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px;">
   <h2>New Order — ${formatMoney(totalCents)}</h2>
@@ -155,11 +129,9 @@ function adminEmailHtml({ order, items, totalCents, customerName, customerEmail,
 </body></html>`;
 }
 
-// ─── Inventory decrement (atomic per-product) ───────────────────────────────
 async function decrementInventory(env, items) {
     for (const it of items) {
         if (!it.product_id) continue;
-        // Atomic: only decrement if enough stock remains
         const res = await env.DB.prepare(
             `UPDATE products
          SET quantity = quantity - ?,
@@ -167,12 +139,9 @@ async function decrementInventory(env, items) {
        WHERE id = ?
          AND quantity >= ?`
         ).bind(it.quantity, it.product_id, it.quantity).run();
-
         if (res.meta.changes === 0) {
-            console.warn(`inventory: could not decrement ${it.product_id} by ${it.quantity} (insufficient stock)`);
+            console.warn(`inventory: could not decrement ${it.product_id} by ${it.quantity}`);
         }
-
-        // Append to inventory_log (best-effort)
         try {
             await env.DB.prepare(
                 `INSERT INTO inventory_log
@@ -185,7 +154,6 @@ async function decrementInventory(env, items) {
     }
 }
 
-// ─── Fetch full Square order (needed for buyer info on some events) ─────────
 async function fetchSquareOrder(env, squareOrderId) {
     try {
         const resp = await fetch(`${squareBase(env)}/v2/orders/${squareOrderId}`, {
@@ -203,11 +171,77 @@ async function fetchSquareOrder(env, squareOrderId) {
     }
 }
 
-// ─── Main handler ───────────────────────────────────────────────────────────
+async function fetchSquareCustomer(env, customerId) {
+    try {
+        const resp = await fetch(`${squareBase(env)}/v2/customers/${customerId}`, {
+            headers: {
+                'Square-Version': SQUARE_API_VERSION,
+                Authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`,
+            },
+        });
+        if (!resp.ok) return null;
+        const j = await resp.json();
+        return j.customer || null;
+    } catch (e) {
+        console.error('fetchSquareCustomer failed', e.message);
+        return null;
+    }
+}
+
+function addressFromSquare(a) {
+    if (!a) return null;
+    return {
+        line1: a.address_line_1 || null,
+        line2: a.address_line_2 || null,
+        city: a.locality || null,
+        state: a.administrative_district_level_1 || null,
+        zip: a.postal_code || null,
+        country: a.country || null,
+    };
+}
+
+function nameFromAddress(a) {
+    if (!a) return null;
+    const parts = [a.first_name, a.last_name].filter(Boolean);
+    return parts.length ? parts.join(' ') : null;
+}
+
+async function enrichCustomerInfo(env, payment, squareOrderId) {
+    let name = null;
+    let email = payment.buyer_email_address || null;
+    let shipping = null;
+
+    if (payment.shipping_address) {
+        shipping = addressFromSquare(payment.shipping_address);
+        name = nameFromAddress(payment.shipping_address);
+    }
+
+    if (!name || !email || !shipping) {
+        const sqOrder = await fetchSquareOrder(env, squareOrderId);
+        const recipient = sqOrder?.fulfillments?.[0]?.shipment_details?.recipient;
+        if (recipient) {
+            name = name || recipient.display_name || null;
+            email = email || recipient.email_address || null;
+            shipping = shipping || addressFromSquare(recipient.address);
+        }
+    }
+
+    if ((!name || !email) && payment.customer_id) {
+        const customer = await fetchSquareCustomer(env, payment.customer_id);
+        if (customer) {
+            email = email || customer.email_address || null;
+            const fullName = [customer.given_name, customer.family_name].filter(Boolean).join(' ');
+            name = name || fullName || null;
+        }
+    }
+
+    console.log('WEBHOOK_ENRICH', JSON.stringify({ name, email, hasShipping: !!shipping }));
+    return { name, email, shipping };
+}
+
 export async function onRequestPost({ request, env }) {
     const rawBody = await request.text();
 
-    // 1. Verify signature
     const valid = await verifySignature(request, rawBody, env.SQUARE_WEBHOOK_SIGNATURE_KEY);
     if (!valid) {
         console.warn('square webhook: bad signature');
@@ -219,9 +253,8 @@ export async function onRequestPost({ request, env }) {
         return new Response('invalid JSON', { status: 400 });
     }
 
-    // 2. Only act on payment.updated → COMPLETED
     if (event.type !== 'payment.updated' && event.type !== 'payment.created') {
-        return new Response('ok', { status: 200 }); // ack but ignore
+        return new Response('ok', { status: 200 });
     }
     const payment = event?.data?.object?.payment;
     if (!payment) return new Response('no payment in event', { status: 200 });
@@ -230,7 +263,6 @@ export async function onRequestPost({ request, env }) {
     const squareOrderId = payment.order_id;
     if (!squareOrderId) return new Response('no order_id', { status: 200 });
 
-    // 3. Atomic claim with retry (handles checkout/webhook race)
     let claimedRow = null;
     for (let attempt = 1; attempt <= MAX_CLAIM_ATTEMPTS; attempt++) {
         const res = await env.DB.prepare(
@@ -255,17 +287,14 @@ export async function onRequestPost({ request, env }) {
             break;
         }
 
-        // No row claimed. Already processed, or doesn't exist yet?
         const existing = await env.DB.prepare(
             `SELECT id, notified FROM orders WHERE square_order_id = ?`
         ).bind(squareOrderId).first();
 
         if (existing) {
-            // Already notified (idempotent) — bail successfully
             return new Response('already processed', { status: 200 });
         }
 
-        // Doesn't exist yet → wait and retry (race condition)
         if (attempt < MAX_CLAIM_ATTEMPTS) {
             console.log(`webhook: order ${squareOrderId} not yet in D1, retry ${attempt}`);
             await sleep(CLAIM_RETRY_DELAY_MS);
@@ -277,35 +306,12 @@ export async function onRequestPost({ request, env }) {
         return new Response('not found', { status: 404 });
     }
 
-    // 4. Parse items, enrich with customer info from Square Order if missing
     let items = [];
     try { items = JSON.parse(claimedRow.items || '[]'); } catch { }
 
-    let customerName = null, customerEmail = null, shipping = null;
-    const sqOrder = await fetchSquareOrder(env, squareOrderId);
-    if (sqOrder) {
-        // Square stores buyer info either on tender, fulfillments, or recipient
-        const recipient = sqOrder.fulfillments?.[0]?.shipment_details?.recipient;
-        if (recipient) {
-            customerName = recipient.display_name || null;
-            customerEmail = recipient.email_address || null;
-            const a = recipient.address;
-            if (a) {
-                shipping = {
-                    line1: a.address_line_1,
-                    line2: a.address_line_2,
-                    city: a.locality,
-                    state: a.administrative_district_level_1,
-                    zip: a.postal_code,
-                    country: a.country,
-                };
-            }
-        }
-    }
-    // Payment.buyer_email_address as fallback
-    customerEmail = customerEmail || payment.buyer_email_address || null;
+    const { name: customerName, email: customerEmail, shipping } =
+        await enrichCustomerInfo(env, payment, squareOrderId);
 
-    // Update order row with customer info (best-effort, separate from atomic claim)
     await env.DB.prepare(
         `UPDATE orders
        SET customer_name = COALESCE(?, customer_name),
@@ -319,10 +325,8 @@ export async function onRequestPost({ request, env }) {
         claimedRow.id
     ).run();
 
-    // 5. Decrement inventory
     await decrementInventory(env, items);
 
-    // 6. Send emails
     const totalCents = claimedRow.total_cents;
     const receiptUrl = payment.receipt_url;
 
@@ -334,6 +338,8 @@ export async function onRequestPost({ request, env }) {
                 order: claimedRow, items, totalCents, receiptUrl, customerName,
             }),
         });
+    } else {
+        console.warn(`webhook: no customer email for order ${claimedRow.id}, skipping customer email`);
     }
 
     if (env.ADMIN_EMAIL) {
