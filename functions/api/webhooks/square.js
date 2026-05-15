@@ -330,28 +330,3 @@ export async function onRequestPost({ request, env }) {
     const totalCents = claimedRow.total_cents;
     const receiptUrl = payment.receipt_url;
 
-    if (customerEmail) {
-        await sendEmail(env, {
-            to: customerEmail,
-            subject: `Order confirmed — Rossi Mission SF`,
-            html: customerEmailHtml({
-                order: claimedRow, items, totalCents, receiptUrl, customerName,
-            }),
-        });
-    } else {
-        console.warn(`webhook: no customer email for order ${claimedRow.id}, skipping customer email`);
-    }
-
-    if (env.ADMIN_EMAIL) {
-        await sendEmail(env, {
-            to: env.ADMIN_EMAIL,
-            subject: `New order — ${formatMoney(totalCents)}`,
-            html: adminEmailHtml({
-                order: claimedRow, items, totalCents,
-                customerName, customerEmail, shipping, receiptUrl,
-            }),
-        });
-    }
-
-    return new Response('ok', { status: 200 });
-}
