@@ -27,3 +27,9 @@ dist-ssr
 .env
 .env.local
 .env.production
+
+# Migration artifacts (local only - DO NOT COMMIT)
+supabase-export/
+migrate-from-supabase.mjs
+build-rest-sql.mjs
+seed-manifest.mjs
