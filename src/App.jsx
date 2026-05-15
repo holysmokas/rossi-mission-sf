@@ -10,6 +10,7 @@ import AdminLogin from './admin/AdminLogin'
 import AdminDashboard from './admin/AdminDashboard'
 import AdminAccount from './admin/AdminAccount'
 import AdminRoute from './admin/AdminRoute'
+import OrderSuccess from './pages/OrderSuccess'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/visit" element={<VisitPage />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/order/success" element={<OrderSuccess />} />
           <Route path="/admin/dashboard" element={
             <AdminRoute>
               <AdminDashboard />

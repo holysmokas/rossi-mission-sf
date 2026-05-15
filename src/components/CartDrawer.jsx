@@ -4,19 +4,37 @@ import './Cart.css'
 
 export default function CartDrawer() {
   const { items, isOpen, setIsOpen, removeItem, updateQuantity, clearCart, itemCount, total } = useCart()
-  const [showOrderInfo, setShowOrderInfo] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState(null)
 
-  function buildOrderSummary() {
-    const lines = items.map((i) =>
-      `• ${i.name}${i.size ? ` (${i.size})` : ''} × ${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`
-    ).join('\n')
-    return `Hi Rossi Mission SF — I'd like to order:\n\n${lines}\n\nTotal: $${total.toFixed(2)}\n\nName:\nShipping address:\nPhone:`
-  }
-
-  function mailtoLink() {
-    const subject = encodeURIComponent(`Order request — $${total.toFixed(2)}`)
-    const body = encodeURIComponent(buildOrderSummary())
-    return `mailto:info@rossimissionsf.com?subject=${subject}&body=${body}`
+  async function handleCheckout() {
+    if (!items.length) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      const resp = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map(i => ({
+            id: i.id,
+            size: i.size || null,
+            quantity: i.quantity,
+          })),
+        }),
+      })
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}))
+        throw new Error(data.error || `Checkout failed (HTTP ${resp.status})`)
+      }
+      const { checkout_url } = await resp.json()
+      if (!checkout_url) throw new Error('No checkout URL returned')
+      // Hand off to Square's hosted checkout
+      window.location.href = checkout_url
+    } catch (e) {
+      setError(e.message)
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -60,52 +78,32 @@ export default function CartDrawer() {
             </div>
 
             <div className="cart-footer">
-              <button className="cart-clear" onClick={clearCart}>Clear Cart</button>
+              <button className="cart-clear" onClick={clearCart} disabled={submitting}>Clear Cart</button>
               <div className="cart-total">
                 <span>Total</span>
                 <span>${total.toFixed(2)}</span>
               </div>
 
-              {!showOrderInfo ? (
-                <button className="cart-checkout-btn" onClick={() => setShowOrderInfo(true)}>
-                  Place Order
-                </button>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <p style={{ fontSize: '0.65rem', color: 'var(--gray-light)', lineHeight: 1.6, letterSpacing: '1px' }}>
-                    Online checkout is briefly offline while we move infrastructure. To place this order, message us — we'll confirm availability and send a secure payment link.
-                  </p>
-                  <a
-                    href={mailtoLink()}
-                    className="cart-checkout-btn"
-                    style={{ textDecoration: 'none', textAlign: 'center', display: 'block' }}
-                  >
-                    Email Order Details
-                  </a>
-                  <a
-                    href="https://instagram.com/rossimissionsf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: 'block',
-                      textAlign: 'center',
-                      padding: '12px',
-                      border: '1px solid var(--gray-mid)',
-                      color: 'var(--gray-light)',
-                      textDecoration: 'none',
-                      fontFamily: "'Space Mono', monospace",
-                      fontSize: '0.65rem',
-                      letterSpacing: '3px',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    DM on Instagram
-                  </a>
-                  <p style={{ textAlign: 'center', fontSize: '0.55rem', color: 'var(--gray-mid)', letterSpacing: '1px' }}>
-                    Or call (510) 883-4757
-                  </p>
-                </div>
+              {error && (
+                <p style={{
+                  color: '#c62828',
+                  fontSize: '0.7rem',
+                  letterSpacing: '1px',
+                  padding: '8px 0',
+                  margin: 0,
+                }}>
+                  {error}
+                </p>
               )}
+
+              <button
+                className="cart-checkout-btn"
+                onClick={handleCheckout}
+                disabled={submitting}
+                style={submitting ? { opacity: 0.6, cursor: 'wait' } : undefined}
+              >
+                {submitting ? 'Redirecting to Checkout…' : 'Checkout'}
+              </button>
             </div>
           </>
         )}
