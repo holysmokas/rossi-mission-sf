@@ -245,7 +245,7 @@ const storage = {
         }
       },
       getPublicUrl(path) {
-        return { data: { publicUrl: `/media/${bucket}/${path}` } }
+        return { data: { publicUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/media/${bucket}/${path}` } }
       },
     }
   },
