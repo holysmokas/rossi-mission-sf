@@ -330,3 +330,6 @@ export async function onRequestPost({ request, env }) {
     const totalCents = claimedRow.total_cents;
     const receiptUrl = payment.receipt_url;
 
+
+  return new Response('ok', { status: 200 });
+}
