@@ -1,6 +1,27 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 export default function AdminLogin() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const navigate = useNavigate()
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError(null)
+    setSubmitting(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setSubmitting(false)
+    if (error) {
+      setError(error.message || 'Login failed')
+      return
+    }
+    navigate('/admin/dashboard')
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -12,7 +33,7 @@ export default function AdminLogin() {
       padding: 20,
       boxSizing: 'border-box',
     }}>
-      <div style={{
+      <form onSubmit={handleSubmit} style={{
         maxWidth: 420,
         width: '100%',
         padding: '48px 32px',
@@ -38,42 +59,86 @@ export default function AdminLogin() {
           textTransform: 'uppercase',
         }}>Admin Panel</p>
 
-        <div style={{
-          padding: 20,
-          border: '1px solid #d0d0d0',
-          background: '#fafafa',
-          marginBottom: 24,
-        }}>
-          <p style={{
-            fontSize: '0.75rem',
-            lineHeight: 1.7,
-            color: '#1a1a1a',
-            letterSpacing: 1,
-            margin: 0,
-          }}>
-            Admin temporarily offline while we migrate to a new backend. The storefront is live and accepting order requests.
-          </p>
-          <p style={{
-            fontSize: '0.65rem',
-            lineHeight: 1.7,
-            color: '#888',
-            letterSpacing: 1,
-            marginTop: 12,
-            marginBottom: 0,
-          }}>
-            Estimated back online: within a few days.
-          </p>
-        </div>
+        <label style={{ display: 'block', fontSize: '0.65rem', letterSpacing: 2, color: '#666', marginBottom: 6 }}>
+          EMAIL
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoFocus
+          style={{
+            width: '100%',
+            padding: '10px 12px',
+            border: '1px solid #d0d0d0',
+            background: '#fff',
+            fontFamily: 'inherit',
+            fontSize: '0.85rem',
+            marginBottom: 18,
+            boxSizing: 'border-box',
+          }}
+        />
 
-        <Link to="/" style={{
-          display: 'block',
-          textAlign: 'center',
-          fontSize: '0.7rem',
-          color: '#888',
-          textDecoration: 'none',
+        <label style={{ display: 'block', fontSize: '0.65rem', letterSpacing: 2, color: '#666', marginBottom: 6 }}>
+          PASSWORD
+        </label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          style={{
+            width: '100%',
+            padding: '10px 12px',
+            border: '1px solid #d0d0d0',
+            background: '#fff',
+            fontFamily: 'inherit',
+            fontSize: '0.85rem',
+            marginBottom: 22,
+            boxSizing: 'border-box',
+          }}
+        />
+
+        {error && (
+          <p style={{
+            color: '#c62828',
+            fontSize: '0.7rem',
+            letterSpacing: 1,
+            margin: '0 0 16px 0',
+          }}>{error}</p>
+        )}
+
+        <button
+          type="submit"
+          disabled={submitting}
+          style={{
+            width: '100%',
+            padding: '12px',
+            background: '#1a1a1a',
+            color: '#fff',
+            border: 'none',
+            fontFamily: 'inherit',
+            fontSize: '0.75rem',
+            letterSpacing: 3,
+            cursor: submitting ? 'wait' : 'pointer',
+            opacity: submitting ? 0.6 : 1,
+          }}
+        >
+          {submitting ? 'SIGNING IN…' : 'SIGN IN'}
+        </button>
+
+        <p style={{
+          fontSize: '0.65rem',
           letterSpacing: 1,
-        }}>← Back to site</Link>
-      </div>
+          color: '#999',
+          textAlign: 'center',
+          marginTop: 24,
+          marginBottom: 0,
+        }}>
+          <a href="/" style={{ color: '#999', textDecoration: 'none' }}>← Back to site</a>
+        </p>
+      </form>
     </div>
   )
 }

@@ -4,17 +4,11 @@
 // client. Keeps the same import name so no other component file
 // needs to change.
 //
-// Phase 1 scope:
-//   - storefront reads:   products, gallery_images, showcase_images
-//   - storefront writes:  newsletter, contact_messages
-//   - auth + storage:     stubbed (admin/uploads return cleanly,
-//                         pages render a maintenance message)
-//
-// Phase 3 will expand auth + admin writes once Cloudflare Access
-// is wired up on /admin/*.
+// Phase 3a: auth methods now route through /api/admin/ endpoints
+//           (login/logout/me/account). Admin writes still TBD in 3b.
 // ─────────────────────────────────────────────────────────────
 
-const API_BASE = '' // same origin as the Pages site
+const API_BASE = ''
 
 class Query {
   constructor(table) {
@@ -58,10 +52,9 @@ class Query {
         return this._finish(res)
       }
 
-      // update/delete are admin-only; phase 1 returns a clean error
       return {
         data: null,
-        error: { code: 'MAINTENANCE', message: 'Admin temporarily unavailable during migration.' },
+        error: { code: 'NOT_IMPLEMENTED', message: 'Admin writes not yet wired (phase 3b).' },
       }
     } catch (err) {
       return { data: null, error: { code: 'NETWORK', message: err.message } }
@@ -70,7 +63,7 @@ class Query {
 
   async _finish(res) {
     let body = {}
-    try { body = await res.json() } catch {}
+    try { body = await res.json() } catch { }
     if (!res.ok) {
       return { data: null, error: body.error || { code: String(res.status), message: res.statusText } }
     }
@@ -82,27 +75,122 @@ class Query {
   then(resolve, reject) { return this._exec().then(resolve, reject) }
 }
 
-// ── Auth: stubbed. Admin pages will render a maintenance state. ──
-const MAINT = { message: 'Admin temporarily unavailable during migration.', code: 'MAINTENANCE' }
-const auth = {
-  getSession: async () => ({ data: { session: null }, error: null }),
-  getUser:    async () => ({ data: { user: null }, error: null }),
-  signInWithPassword: async () => ({ data: null, error: MAINT }),
-  signUp:             async () => ({ data: null, error: MAINT }),
-  signOut:            async () => ({ error: null }),
-  updateUser:         async () => ({ data: null, error: MAINT }),
-  resetPasswordForEmail: async () => ({ data: null, error: MAINT }),
-  onAuthStateChange: () => ({
-    data: { subscription: { unsubscribe() {} } },
-  }),
+// ─────────── Auth: real implementation via /api/admin/* ────────────
+
+const authListeners = new Set()
+
+function notifyAuthChange(event, session) {
+  for (const cb of authListeners) {
+    try { cb(event, session) } catch (e) { console.error('auth listener error', e) }
+  }
 }
 
-// ── Storage: stubbed. Uploads come back in phase 3. ──
+async function fetchMe() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/me`, { credentials: 'include' })
+    if (!res.ok) return null
+    const body = await res.json()
+    return body.user || null
+  } catch {
+    return null
+  }
+}
+
+const auth = {
+  async getSession() {
+    const user = await fetchMe()
+    return {
+      data: { session: user ? { user } : null },
+      error: null,
+    }
+  },
+
+  async getUser() {
+    const user = await fetchMe()
+    return {
+      data: { user },
+      error: user ? null : { code: 'NO_SESSION', message: 'not authenticated' },
+    }
+  },
+
+  async signInWithPassword({ email, password }) {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        return { data: null, error: { code: 'INVALID', message: body.error || 'login failed' } }
+      }
+      notifyAuthChange('SIGNED_IN', { user: body.user })
+      return { data: { user: body.user, session: { user: body.user } }, error: null }
+    } catch (err) {
+      return { data: null, error: { code: 'NETWORK', message: err.message } }
+    }
+  },
+
+  async signOut() {
+    try {
+      await fetch(`${API_BASE}/api/admin/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch { }
+    notifyAuthChange('SIGNED_OUT', null)
+    return { error: null }
+  },
+
+  async updateUser({ email, password, currentPassword }) {
+    try {
+      const body = { current_password: currentPassword }
+      if (email) body.email = email
+      if (password) body.new_password = password
+
+      const res = await fetch(`${API_BASE}/api/admin/account`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      })
+      const respBody = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        return { data: null, error: { code: 'UPDATE_FAILED', message: respBody.error || 'update failed' } }
+      }
+      return { data: { user: { email } }, error: null }
+    } catch (err) {
+      return { data: null, error: { code: 'NETWORK', message: err.message } }
+    }
+  },
+
+  async signUp() {
+    return { data: null, error: { code: 'DISABLED', message: 'Self-signup disabled. Contact admin.' } }
+  },
+  async resetPasswordForEmail() {
+    return { data: null, error: { code: 'DISABLED', message: 'Use the admin account page after logging in.' } }
+  },
+
+  onAuthStateChange(callback) {
+    authListeners.add(callback)
+    return {
+      data: {
+        subscription: {
+          unsubscribe: () => authListeners.delete(callback),
+        },
+      },
+    }
+  },
+}
+
+// ── Storage: still stubbed; comes in phase 3c. ──
+const MAINT = { message: 'Image upload not yet wired (phase 3c).', code: 'PENDING' }
 const storage = {
   from(_bucket) {
     return {
-      upload:        async () => ({ data: null, error: MAINT }),
-      remove:        async () => ({ data: null, error: null }),
+      upload: async () => ({ data: null, error: MAINT }),
+      remove: async () => ({ data: null, error: null }),
       getPublicUrl: (path) => ({ data: { publicUrl: path || '' } }),
     }
   },
