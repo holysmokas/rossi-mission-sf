@@ -168,11 +168,12 @@ const auth = {
     notifyAuthChange('SIGNED_OUT', null)
     return { error: null }
   },
-  async updateUser({ email, password, currentPassword }) {
+  async updateUser({ email, password, data }) {
     try {
-      const body = { current_password: currentPassword }
+      const body = {}
       if (email) body.email = email
       if (password) body.new_password = password
+      if (data) body.data = data
       const res = await fetch(`${API_BASE}/api/admin/account`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

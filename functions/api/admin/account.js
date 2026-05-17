@@ -1,4 +1,4 @@
-import { hashPassword, verifyPassword } from '../../_lib/auth.js'
+import { hashPassword } from '../../_lib/auth.js'
 
 export async function onRequestPut({ request, env, data }) {
     const user = data.user
@@ -9,19 +9,6 @@ export async function onRequestPut({ request, env, data }) {
         return Response.json({ error: 'invalid JSON' }, { status: 400 })
     }
 
-    if (!body.current_password) {
-        return Response.json({ error: 'current password required' }, { status: 400 })
-    }
-
-    const dbUser = await env.DB.prepare(
-        `SELECT password_hash FROM admin_users WHERE id = ?`
-    ).bind(user.sub).first()
-
-    if (!dbUser) return Response.json({ error: 'user not found' }, { status: 404 })
-
-    const valid = await verifyPassword(body.current_password, dbUser.password_hash)
-    if (!valid) return Response.json({ error: 'current password incorrect' }, { status: 401 })
-
     const updates = []
     const binds = []
 
@@ -31,11 +18,22 @@ export async function onRequestPut({ request, env, data }) {
     }
 
     if (body.new_password) {
-        if (body.new_password.length < 8) {
-            return Response.json({ error: 'password must be at least 8 characters' }, { status: 400 })
+        if (body.new_password.length < 6) {
+            return Response.json({ error: 'password must be at least 6 characters' }, { status: 400 })
         }
         updates.push('password_hash = ?')
         binds.push(await hashPassword(body.new_password))
+    }
+
+    if (body.data && typeof body.data === 'object') {
+        if ('full_name' in body.data) {
+            updates.push('full_name = ?')
+            binds.push(String(body.data.full_name || '').slice(0, 100))
+        }
+        if ('phone' in body.data) {
+            updates.push('phone = ?')
+            binds.push(String(body.data.phone || '').slice(0, 20))
+        }
     }
 
     if (updates.length === 0) {
@@ -43,9 +41,13 @@ export async function onRequestPut({ request, env, data }) {
     }
 
     binds.push(user.sub)
-    await env.DB.prepare(
-        `UPDATE admin_users SET ${updates.join(', ')}, updated_at = unixepoch() WHERE id = ?`
-    ).bind(...binds).run()
+    try {
+        await env.DB.prepare(
+            `UPDATE admin_users SET ${updates.join(', ')}, updated_at = unixepoch() WHERE id = ?`
+        ).bind(...binds).run()
+    } catch (err) {
+        return Response.json({ error: err.message }, { status: 400 })
+    }
 
     return Response.json({ ok: true })
 }
