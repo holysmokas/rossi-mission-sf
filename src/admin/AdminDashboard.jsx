@@ -203,7 +203,7 @@ export default function AdminDashboard() {
   }
 
   function formatDate(dateStr) {
-    const d = new Date(dateStr)
+    const d = new Date(Number(dateStr) * 1000)
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
   }
 
