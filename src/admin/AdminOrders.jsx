@@ -15,7 +15,7 @@ function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1) }
 
 function formatDate(dateStr) {
     if (!dateStr) return '—'
-    const d = new Date(dateStr)
+    const d = new Date(Number(dateStr) * 1000)
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
@@ -148,18 +148,18 @@ export default function AdminOrders() {
         // Time
         if (timeFilter === 'today') {
             const start = startOfDay(now)
-            result = result.filter(o => new Date(o.paid_at || o.created_at) >= start)
+            result = result.filter(o => new Date((o.paid_at || o.created_at) * 1000) >= start)
         } else if (timeFilter === 'week') {
             const start = startOfWeek(now)
-            result = result.filter(o => new Date(o.paid_at || o.created_at) >= start)
+            result = result.filter(o => new Date((o.paid_at || o.created_at) * 1000) >= start)
         } else if (timeFilter === 'month') {
             const start = startOfMonth(now)
-            result = result.filter(o => new Date(o.paid_at || o.created_at) >= start)
+            result = result.filter(o => new Date((o.paid_at || o.created_at) * 1000) >= start)
         } else if (timeFilter === 'custom' && customFrom) {
             const from = new Date(customFrom)
             const to = customTo ? new Date(customTo + 'T23:59:59') : now
             result = result.filter(o => {
-                const d = new Date(o.paid_at || o.created_at)
+                const d = new Date((o.paid_at || o.created_at) * 1000)
                 return d >= from && d <= to
             })
         }
@@ -207,7 +207,7 @@ export default function AdminOrders() {
                 const items = (o.items || []).map(i => `${i.name}${i.size ? ` (${i.size})` : ''} x${i.quantity || 1}`).join('; ')
                 const addr = formatAddress(o.shipping_address)
                 const total = ((o.total_cents || 0) / 100).toFixed(2)
-                const date = (o.paid_at || o.created_at) ? new Date(o.paid_at || o.created_at).toISOString().split('T')[0] : ''
+                const date = (o.paid_at || o.created_at) ? new Date((o.paid_at || o.created_at) * 1000).toISOString().split('T')[0] : ''
                 return [
                     date,
                     `"${(o.customer_name || '').replace(/"/g, '""')}"`,
