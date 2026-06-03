@@ -215,6 +215,7 @@ export default function AdminDashboard() {
           <a href="/" target="_blank" rel="noopener noreferrer" className="admin-view-site">View Site →</a>
         </div>
         <div className="admin-header-actions">
+          <Link to="/admin/reports" className="admin-btn ghost small">Reports</Link>
           <Link to="/admin/account" className="admin-btn ghost small">Account</Link>
           <button onClick={handleLogout} className="admin-btn ghost small">Sign Out</button>
         </div>

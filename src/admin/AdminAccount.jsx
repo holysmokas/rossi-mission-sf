@@ -25,6 +25,11 @@ export default function AdminAccount() {
     const [emailMsg, setEmailMsg] = useState({ type: '', text: '' })
     const [changingEmail, setChangingEmail] = useState(false)
 
+    // Report frequency
+    const [reportFrequency, setReportFrequency] = useState('weekly')
+    const [frequencyMsg, setFrequencyMsg] = useState({ type: '', text: '' })
+    const [savingFrequency, setSavingFrequency] = useState(false)
+
     useEffect(() => {
         loadUser()
     }, [])
@@ -39,6 +44,7 @@ export default function AdminAccount() {
         setCurrentEmail(user.email || '')
         setFullName(user.user_metadata?.full_name || '')
         setPhone(user.user_metadata?.phone || '')
+        setReportFrequency(user.user_metadata?.report_frequency || 'weekly')
         setLoading(false)
     }
 
@@ -85,10 +91,8 @@ export default function AdminAccount() {
         if (error) {
             setEmailMsg({ type: 'error', text: error.message })
         } else {
-            setEmailMsg({
-                type: 'success',
-                text: 'Confirmation sent to both your old and new email. Click the links in both to complete the change.',
-            })
+            setEmailMsg({ type: 'success', text: 'Email updated.' })
+            setCurrentEmail(trimmed)
             setNewEmail('')
         }
         setChangingEmail(false)
@@ -121,6 +125,28 @@ export default function AdminAccount() {
             setConfirmPassword('')
         }
         setSaving(false)
+    }
+
+    async function handleFrequencySave(e) {
+        e.preventDefault()
+        setSavingFrequency(true)
+        setFrequencyMsg({ type: '', text: '' })
+
+        const { error } = await supabase.auth.updateUser({
+            data: { report_frequency: reportFrequency },
+        })
+
+        if (error) {
+            setFrequencyMsg({ type: 'error', text: error.message })
+        } else {
+            setFrequencyMsg({
+                type: 'success',
+                text: reportFrequency === 'none'
+                    ? 'Email reports disabled.'
+                    : `Report frequency set to ${reportFrequency}.`,
+            })
+        }
+        setSavingFrequency(false)
     }
 
     async function handleLogout() {
@@ -201,7 +227,7 @@ export default function AdminAccount() {
                 {/* ── CHANGE EMAIL ── */}
                 <div className="account-card">
                     <h2 className="account-card-title">Change Email</h2>
-                    <p className="account-card-subtitle">A confirmation will be sent to both your old and new email.</p>
+                    <p className="account-card-subtitle">Update the email used to sign in.</p>
 
                     <form onSubmit={handleEmailChange} className="account-form">
                         <div className="admin-field">
@@ -222,7 +248,7 @@ export default function AdminAccount() {
                         )}
 
                         <button type="submit" className="admin-btn primary" disabled={changingEmail}>
-                            {changingEmail ? 'Sending...' : 'Update Email'}
+                            {changingEmail ? 'Updating...' : 'Update Email'}
                         </button>
                     </form>
                 </div>
@@ -265,6 +291,39 @@ export default function AdminAccount() {
 
                         <button type="submit" className="admin-btn primary" disabled={saving}>
                             {saving ? 'Updating...' : 'Update Password'}
+                        </button>
+                    </form>
+                </div>
+
+                {/* ── EMAIL REPORTS ── */}
+                <div className="account-card">
+                    <h2 className="account-card-title">Email Reports</h2>
+                    <p className="account-card-subtitle">
+                        How often should we email you a sales summary? (Email sending will be wired up in a future update.)
+                    </p>
+
+                    <form onSubmit={handleFrequencySave} className="account-form">
+                        <div className="admin-field">
+                            <label>Frequency</label>
+                            <select
+                                value={reportFrequency}
+                                onChange={(e) => setReportFrequency(e.target.value)}
+                            >
+                                <option value="none">None — don't email me</option>
+                                <option value="daily">Daily (every morning)</option>
+                                <option value="weekly">Weekly (Sunday morning)</option>
+                                <option value="monthly">Monthly (1st of month)</option>
+                            </select>
+                        </div>
+
+                        {frequencyMsg.text && (
+                            <p className={frequencyMsg.type === 'success' ? 'admin-success' : 'admin-error'}>
+                                {frequencyMsg.text}
+                            </p>
+                        )}
+
+                        <button type="submit" className="admin-btn primary" disabled={savingFrequency}>
+                            {savingFrequency ? 'Saving...' : 'Save Preference'}
                         </button>
                     </form>
                 </div>

@@ -36,99 +36,6 @@ async function verifySignature(request, rawBody, signatureKey) {
     return diff === 0;
 }
 
-async function sendEmail(env, { to, subject, html }) {
-    if (!env.RESEND_API_KEY) {
-        console.warn('RESEND_API_KEY missing, skipping email to', to);
-        return;
-    }
-    const resp = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-            Authorization: `Bearer ${env.RESEND_API_KEY}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            from: `Rossi Mission SF <${env.FROM_EMAIL}>`,
-            to: [to],
-            subject,
-            html,
-        }),
-    });
-    if (!resp.ok) {
-        const text = await resp.text();
-        console.error('resend send failed', resp.status, text.slice(0, 300));
-    }
-}
-
-function formatMoney(cents, currency = 'USD') {
-    return `$${(cents / 100).toFixed(2)} ${currency}`;
-}
-
-function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
-}
-
-function buildItemsHtml(items) {
-    return items.map(i =>
-        `<tr>
-       <td style="padding:8px 12px;border-bottom:1px solid #eee;">${escapeHtml(i.name || 'Item')}</td>
-       <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">${i.quantity}</td>
-       <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">$${((i.price || 0) * i.quantity).toFixed(2)}</td>
-     </tr>`
-    ).join('');
-}
-
-function customerEmailHtml({ order, items, totalCents, receiptUrl, customerName }) {
-    return `<!doctype html>
-<html><body style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#222;">
-  <h2 style="font-weight:600;letter-spacing:1px;margin-bottom:8px;">ORDER CONFIRMED</h2>
-  <p style="color:#555;margin-top:0;">Thanks${customerName ? `, ${escapeHtml(customerName)}` : ''}. We've received your order and will ship soon.</p>
-  <p style="color:#777;font-size:13px;">Order #${escapeHtml(order.id.slice(0, 8))}</p>
-  <table style="width:100%;border-collapse:collapse;margin:20px 0;font-size:14px;">
-    <thead><tr style="border-bottom:2px solid #222;">
-      <th style="padding:8px 12px;text-align:left;">Item</th>
-      <th style="padding:8px 12px;text-align:right;">Qty</th>
-      <th style="padding:8px 12px;text-align:right;">Total</th>
-    </tr></thead>
-    <tbody>${buildItemsHtml(items)}</tbody>
-    <tfoot><tr>
-      <td colspan="2" style="padding:12px;text-align:right;font-weight:600;">Total</td>
-      <td style="padding:12px;text-align:right;font-weight:600;">${formatMoney(totalCents)}</td>
-    </tr></tfoot>
-  </table>
-  ${receiptUrl ? `<p><a href="${escapeHtml(receiptUrl)}" style="color:#222;">View Square receipt →</a></p>` : ''}
-  <p style="margin-top:32px;color:#777;font-size:13px;">Questions? Reply to this email or DM <a href="https://instagram.com/rossimissionsf">@rossimissionsf</a>.</p>
-  <p style="color:#999;font-size:12px;">Rossi Mission SF · 799 Valencia Street, San Francisco</p>
-</body></html>`;
-}
-
-function adminEmailHtml({ order, items, totalCents, customerName, customerEmail, shipping, receiptUrl }) {
-    const shippingHtml = shipping
-        ? `<p><strong>Ship to:</strong><br>
-       ${escapeHtml(customerName || '')}<br>
-       ${escapeHtml(shipping.line1 || '')}${shipping.line2 ? `<br>${escapeHtml(shipping.line2)}` : ''}<br>
-       ${escapeHtml(shipping.city || '')}, ${escapeHtml(shipping.state || '')} ${escapeHtml(shipping.zip || '')}<br>
-       ${escapeHtml(shipping.country || '')}</p>`
-        : '<p><em>No shipping address captured</em></p>';
-    return `<!doctype html>
-<html><body style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px;">
-  <h2>New Order — ${formatMoney(totalCents)}</h2>
-  <p>Order #${escapeHtml(order.id.slice(0, 8))} · ${escapeHtml(customerEmail || 'no email')}</p>
-  <table style="width:100%;border-collapse:collapse;margin:20px 0;font-size:14px;">
-    <thead><tr style="border-bottom:2px solid #222;">
-      <th style="padding:8px 12px;text-align:left;">Item</th>
-      <th style="padding:8px 12px;text-align:right;">Qty</th>
-      <th style="padding:8px 12px;text-align:right;">Total</th>
-    </tr></thead>
-    <tbody>${buildItemsHtml(items)}</tbody>
-  </table>
-  ${shippingHtml}
-  ${receiptUrl ? `<p><a href="${escapeHtml(receiptUrl)}">Square receipt</a></p>` : ''}
-</body></html>`;
-}
-
 async function decrementInventory(env, items) {
     for (const it of items) {
         if (!it.product_id) continue;
@@ -239,6 +146,65 @@ async function enrichCustomerInfo(env, payment, squareOrderId) {
     return { name, email, shipping };
 }
 
+function itemsFromSquareOrder(sqOrder) {
+    if (!sqOrder?.line_items) return [];
+    return sqOrder.line_items.map((li) => ({
+        name: li.name || 'Item',
+        quantity: parseInt(li.quantity || '1', 10),
+        price: li.base_price_money ? li.base_price_money.amount / 100 : 0,
+        total_cents: li.total_money?.amount || 0,
+        square_uid: li.uid || null,
+    }));
+}
+
+async function captureInStoreSale(env, payment, squareOrderId) {
+    const sqOrder = await fetchSquareOrder(env, squareOrderId);
+    if (!sqOrder) {
+        console.error(`webhook: in-store fetch failed for ${squareOrderId}`);
+        return false;
+    }
+
+    const items = itemsFromSquareOrder(sqOrder);
+    const totalCents = sqOrder.total_money?.amount || payment.total_money?.amount || 0;
+
+    let customerName = null;
+    let customerEmail = payment.buyer_email_address || null;
+    if (payment.customer_id) {
+        const customer = await fetchSquareCustomer(env, payment.customer_id);
+        if (customer) {
+            customerEmail = customerEmail || customer.email_address || null;
+            const fullName = [customer.given_name, customer.family_name].filter(Boolean).join(' ');
+            customerName = fullName || null;
+        }
+    }
+
+    const id = crypto.randomUUID();
+    try {
+        await env.DB.prepare(
+            `INSERT INTO orders
+         (id, square_order_id, square_payment_id, square_receipt_url,
+          status, source, total_cents, items, notified, paid_at,
+          customer_name, customer_email)
+       VALUES (?, ?, ?, ?, 'paid', 'in_store', ?, ?, 1, ?, ?, ?)`
+        ).bind(
+            id,
+            squareOrderId,
+            payment.id,
+            payment.receipt_url || null,
+            totalCents,
+            JSON.stringify(items),
+            nowSecs(),
+            customerName,
+            customerEmail
+        ).run();
+        console.log(`webhook: captured in-store sale ${id} ($${(totalCents / 100).toFixed(2)})`);
+        return true;
+    } catch (err) {
+        console.error('webhook: in-store insert failed', err.message);
+        return false;
+    }
+}
+
 export async function onRequestPost({ request, env }) {
     const rawBody = await request.text();
 
@@ -302,8 +268,9 @@ export async function onRequestPost({ request, env }) {
     }
 
     if (!claimedRow) {
-        console.error(`webhook: gave up claiming ${squareOrderId} after ${MAX_CLAIM_ATTEMPTS} attempts`);
-        return new Response('not found', { status: 404 });
+        console.log(`webhook: no online order match for ${squareOrderId} after ${MAX_CLAIM_ATTEMPTS} attempts, capturing as in-store`);
+        await captureInStoreSale(env, payment, squareOrderId);
+        return new Response('ok', { status: 200 });
     }
 
     let items = [];
@@ -327,9 +294,5 @@ export async function onRequestPost({ request, env }) {
 
     await decrementInventory(env, items);
 
-    const totalCents = claimedRow.total_cents;
-    const receiptUrl = payment.receipt_url;
-
-
-  return new Response('ok', { status: 200 });
+    return new Response('ok', { status: 200 });
 }

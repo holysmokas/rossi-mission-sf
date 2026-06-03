@@ -9,6 +9,7 @@ import CheckoutSuccess from './components/CheckoutSuccess'
 import AdminLogin from './admin/AdminLogin'
 import AdminDashboard from './admin/AdminDashboard'
 import AdminAccount from './admin/AdminAccount'
+import AdminReports from './admin/AdminReports'
 import AdminRoute from './admin/AdminRoute'
 import OrderSuccess from './pages/OrderSuccess'
 
@@ -33,6 +34,11 @@ export default function App() {
           <Route path="/admin/account" element={
             <AdminRoute>
               <AdminAccount />
+            </AdminRoute>
+          } />
+          <Route path="/admin/reports" element={
+            <AdminRoute>
+              <AdminReports />
             </AdminRoute>
           } />
         </Routes>

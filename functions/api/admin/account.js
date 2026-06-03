@@ -1,5 +1,7 @@
 import { hashPassword } from '../../_lib/auth.js'
 
+const VALID_FREQUENCIES = new Set(['none', 'daily', 'weekly', 'monthly'])
+
 export async function onRequestPut({ request, env, data }) {
     const user = data.user
     if (!user) return Response.json({ error: 'unauthorized' }, { status: 401 })
@@ -33,6 +35,14 @@ export async function onRequestPut({ request, env, data }) {
         if ('phone' in body.data) {
             updates.push('phone = ?')
             binds.push(String(body.data.phone || '').slice(0, 20))
+        }
+        if ('report_frequency' in body.data) {
+            const freq = String(body.data.report_frequency || 'weekly')
+            if (!VALID_FREQUENCIES.has(freq)) {
+                return Response.json({ error: 'invalid report_frequency' }, { status: 400 })
+            }
+            updates.push('report_frequency = ?')
+            binds.push(freq)
         }
     }
 
