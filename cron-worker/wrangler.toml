@@ -1,0 +1,22 @@
+name = "rossi-cron"
+main = "src/index.js"
+compatibility_date = "2026-05-13"
+
+# Cron: 14:00 UTC = 7:00 AM PDT(Mar - Nov) / 6:00 AM PST(Nov - Mar)
+# Cloudflare crons run in UTC and don't follow DST. Acceptable drift for now.
+[triggers]
+crons = ["0 14 * * *"]
+
+# Same D1 database as the Pages site
+[[d1_databases]]
+binding = "DB"
+database_name = "rossi"
+database_id = "ee5bab58-2326-49e7-a5b6-4ff34884fb86"
+
+[vars]
+FROM_EMAIL = "reports@milanilabs.com"
+SITE_URL = "https://www.rossimissionsf.com"
+
+# Secrets set via: wrangler secret put < NAME >
+#   RESEND_API_KEY        — Resend API key(rk_live_...)
+#   MANUAL_TRIGGER_SECRET — random token for the manual test endpoint
