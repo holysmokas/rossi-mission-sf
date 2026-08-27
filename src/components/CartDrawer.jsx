@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCart } from '../context/CartContext'
+import { trackBeginCheckout } from '../lib/analytics'
 import './Cart.css'
 
 export default function CartDrawer() {
@@ -11,6 +12,7 @@ export default function CartDrawer() {
     if (!items.length) return
     setSubmitting(true)
     setError(null)
+    trackBeginCheckout(items, total)
     try {
       const resp = await fetch('/api/checkout', {
         method: 'POST',

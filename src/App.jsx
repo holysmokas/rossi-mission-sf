@@ -12,11 +12,13 @@ import AdminAccount from './admin/AdminAccount'
 import AdminReports from './admin/AdminReports'
 import AdminRoute from './admin/AdminRoute'
 import OrderSuccess from './pages/OrderSuccess'
+import RouteTracker from './components/RouteTracker'
 
 export default function App() {
   return (
     <CartProvider>
       <BrowserRouter>
+        <RouteTracker />
         <Routes>
           <Route path="/" element={<Site />} />
           <Route path="/shop" element={<ShopPage />} />

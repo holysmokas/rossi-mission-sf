@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { trackPurchase } from '../lib/analytics'
 import { useSearchParams, Link } from 'react-router-dom'
 
 export default function OrderSuccess() {
@@ -26,6 +27,7 @@ export default function OrderSuccess() {
                         if (cancelled) return
                         setOrder(data)
                         if (data?.status === 'paid') {
+                            trackPurchase(data)
                             setStatus('confirmed')
                             return
                         }

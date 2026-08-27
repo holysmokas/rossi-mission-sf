@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { trackAddToCart } from '../lib/analytics'
 
 const CartContext = createContext()
 
@@ -23,6 +24,7 @@ export function CartProvider({ children }) {
   }, [items])
 
   function addItem(product, size = null) {
+    trackAddToCart(product, size)
     setItems(prev => {
       const key = `${product.id}-${size || 'default'}`
       const existing = prev.find(i => i.key === key)
